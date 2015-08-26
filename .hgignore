@@ -1,0 +1,8 @@
+syntax:glob
+
+*.egg-info
+*.py[co]
+__pycache__
+dist/
+build/
+.git/

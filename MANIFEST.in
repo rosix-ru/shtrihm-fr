@@ -1,0 +1,9 @@
+include README.rst
+include AUTHORS
+include INSTALL
+include LICENSE
+
+recursive-include shtrihmfr *
+
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
