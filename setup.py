@@ -13,7 +13,7 @@ setup(
     zip_safe=False,
     packages=find_packages(),
     include_package_data = True,
-    install_requires=['six', 'serial'],
+    install_requires=['six', 'pyserial'],
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Console',
