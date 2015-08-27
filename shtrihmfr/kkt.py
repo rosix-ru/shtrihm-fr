@@ -46,7 +46,7 @@ class KktError(Exception):
         else:
             msg = value
 
-        if six.PY2:
+        if not six.PY3:
             try:
                 msg = msg.encode('utf-8')
             except UnicodeError:

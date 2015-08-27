@@ -47,7 +47,7 @@ class Struct(struct.Struct):
     def pre_value(self, value):
         """ Обрезает или добавляет нулевые байты """
         if self.size:
-            if self.format in ('h','i','I','l','L','q','Q'):
+            if self.format in (b'h',b'i',b'I',b'l',b'L',b'q',b'Q'):
                 _len = len(value)
                 if _len < self.size:
                     value = value.ljust(self.size, chr(0x0))
@@ -58,7 +58,7 @@ class Struct(struct.Struct):
     def post_value(self, value):
         """ Обрезает или добавляет нулевые байты """
         if self.length:
-            if self.format in ('h','i','I','l','L','q','Q'):
+            if self.format in (b'h',b'i',b'I',b'l',b'L',b'q',b'Q'):
                 _len = len(value)
                 if _len < self.length:
                     value = value.ljust(self.length, chr(0x0))
@@ -68,19 +68,19 @@ class Struct(struct.Struct):
 
 # Объекты класса Struct
 # Формат short по длинне 2 байта
-int2 = Struct('h', length=2)
+int2 = Struct(b'h', length=2)
 # Формат int по длинне 3 байта
-int3 = Struct('i', length=3)
+int3 = Struct(b'i', length=3)
 # Формат int == long по длинне 4 байта
-int4 = Struct('i', length=4)
+int4 = Struct(b'i', length=4)
 # Формат "long long" для 5-ти байтовых чисел
-int5 = Struct('q', length=5)
+int5 = Struct(b'q', length=5)
 # Формат "long long" для 6-ти байтовых чисел
-int6 = Struct('q', length=6)
+int6 = Struct(b'q', length=6)
 # Формат "long long" для 7-ти байтовых чисел
-int7 = Struct('q', length=7)
+int7 = Struct(b'q', length=7)
 # Формат "long long" для 8-ти байтовых чисел
-int8 = Struct('q', length=8)
+int8 = Struct(b'q', length=8)
 
 
 def string2bits(string):
@@ -153,7 +153,7 @@ def password_prapare(password):
             return digits2string(password[:4])
         except:
             msg = 'Тип пароля неидентифицирован'
-            if six.PY2:
+            if not six.PY3:
                 msg = msg.encode('utf-8')
             raise TypeError(msg)
 
@@ -161,7 +161,7 @@ def password_prapare(password):
 
     if password > 9999:
         msg = 'Пароль должен быть от 0 до 9999'
-        if six.PY2:
+        if not six.PY3:
             msg = msg.encode('utf-8')
         raise ValueError(msg)
 
