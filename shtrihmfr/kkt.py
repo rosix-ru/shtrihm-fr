@@ -123,8 +123,8 @@ class BaseKKT(object):
     """
     error          = ''
     port           = DEFAULT_PORT
-    password       = DEFAULT_PASSWORD
-    admin_password = DEFAULT_ADMIN_PASSWORD
+    password       = password_prapare(DEFAULT_PASSWORD)
+    admin_password = password_prapare(DEFAULT_ADMIN_PASSWORD)
     bod            = DEFAULT_BOD
     parity         = serial.PARITY_NONE
     stopbits       = serial.STOPBITS_ONE
@@ -136,6 +136,11 @@ class BaseKKT(object):
             значений, либо в виде обычной ASCII строки. Длина пароля 4
             ASCII символа.
         """
+        if 'password' in kwargs:
+            self.password = password_prapare(kwargs.pop('password'))
+        if 'admin_password' in kwargs:
+            self.admin_password = password_prapare(kwargs.pop('admin_password'))
+
         [ setattr(self, k, v) for k,v in kwargs.items() ]
 
     @property
