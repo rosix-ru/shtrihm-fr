@@ -19,7 +19,6 @@
 #  
 #  
 from __future__ import unicode_literals
-import six
 
 import serial
 import time
@@ -46,7 +45,7 @@ class KktError(Exception):
         else:
             msg = value
 
-        if not six.PY3:
+        if PY2:
             try:
                 msg = msg.encode('utf-8')
             except UnicodeError:
@@ -54,9 +53,9 @@ class KktError(Exception):
 
         super(KktError, self).__init__(msg)
 
+
 class ConnectionError(KktError):
     pass
-
 
 
 class BaseKKT(object):
@@ -160,13 +159,16 @@ class BaseKKT(object):
 
     def connect(self):
         """ Устанавливает соединение """
-        self._conn = serial.Serial(
-            self.port, self.bod,
-            parity=self.parity,
-            stopbits=self.stopbits,
-            timeout=self.timeout,
-            writeTimeout=self.writeTimeout
-        )
+        try:
+            self._conn = serial.Serial(
+                self.port, self.bod,
+                parity=self.parity,
+                stopbits=self.stopbits,
+                timeout=self.timeout,
+                writeTimeout=self.writeTimeout
+            )
+        except serial.SerialException:
+            raise ConnectionError('Невозможно соединиться с ККМ (порт=%s)' % self.port)
 
         return self.check_port()
 
@@ -3473,4 +3475,8 @@ class KKT(BaseKKT):
                 ответного сообщения.
         """
         raise NotImplemented
+
+
+
+
 

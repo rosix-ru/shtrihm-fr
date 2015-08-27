@@ -21,13 +21,16 @@
 
 from __future__ import unicode_literals
 import struct
-import six
+import sys
 
 
-__all__ = ('int2', 'int4', 'int5', 'int6', 'int7', 'int8',
+__all__ = ('PY2', 'int2', 'int4', 'int5', 'int6', 'int7', 'int8',
     'money2integer', 'integer2money', 'count2integer',
     'get_control_summ','string2bits', 'bits2string',
     'digits2string', 'password_prapare')
+
+
+PY2 = sys.version_info[0] == 2
 
 
 class Struct(struct.Struct):
@@ -153,7 +156,7 @@ def password_prapare(password):
             return digits2string(password[:4])
         except:
             msg = 'Тип пароля неидентифицирован'
-            if not six.PY3:
+            if PY2:
                 msg = msg.encode('utf-8')
             raise TypeError(msg)
 
@@ -161,7 +164,7 @@ def password_prapare(password):
 
     if password > 9999:
         msg = 'Пароль должен быть от 0 до 9999'
-        if not six.PY3:
+        if PY2:
             msg = msg.encode('utf-8')
         raise ValueError(msg)
 
