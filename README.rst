@@ -1,3 +1,3 @@
-This is driver for Shtrih-M cash registers.
+This is driver for Shtrih-M cash registers_.
 
-* cash registers: http://www.shtrih-m.ru/catalog/avtonomnye-i-sistemnye-kkm-i-aspd/
+.. _registers: http://www.shtrih-m.ru/catalog/avtonomnye-i-sistemnye-kkm-i-aspd/
