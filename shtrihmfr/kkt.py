@@ -3052,7 +3052,7 @@ class KKT(BaseKKT):
         """
         raise NotImplemented
 
-    def xC2(self):
+    def xC2(self,barcode):
         """ Печать штрих-кода
             Команда: C2H. Длина сообщения: 10 байт.
                 Пароль оператора (4 байта)
@@ -3061,7 +3061,13 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        command = 0xC2
+        barcode = int5.pack(barcode)
+
+        params  = self.password + barcode
+        data, error, command = self.ask(command, params)
+        operator = ord(data[0])
+        return operator
 
     def xC3(self):
         """ Печать расширенной графики
