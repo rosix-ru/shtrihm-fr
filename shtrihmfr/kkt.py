@@ -4537,33 +4537,3 @@ class KKT(BaseKKT):
                 Сдача ( 5 байт) 0000000000...9999999999
         """
         raise NotImplementedError()
-
-    def xFF44(self):
-        """
-        """
-        raise NotImplementedError()
-
-    def xFF44(self):
-        """
-        """
-        raise NotImplementedError()
-
-    def xFF44(self):
-        """
-        """
-        raise NotImplementedError()
-
-    def xFF44(self):
-        """
-        """
-        raise NotImplementedError()
-
-    def xFF44(self):
-        """
-        """
-        raise NotImplementedError()
-
-    def xFF44(self):
-        """
-        """
-        raise NotImplementedError()
