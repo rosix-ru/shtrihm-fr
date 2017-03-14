@@ -425,6 +425,7 @@ class KKT(BaseKKT):
         data, error, command = self.ask(command, params)
         return error
 
+    # Not implemented
     def x0D(self, old_password, new_password, rnm, inn):
         """ Фискализация (перерегистрация) с длинным РНМ
             Команда: 0DH. Длина сообщения: 22 байта.
@@ -441,6 +442,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x0E(self):
         """ Ввод длинного заводского номера
             Команда: 0EH. Длина сообщения: 12 байт.
@@ -451,6 +453,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x0F(self):
         """ Запрос длинного заводского номера и длинного РНМ
             Команда: 0FH. Длина сообщения: 5 байт.
@@ -651,6 +654,7 @@ class KKT(BaseKKT):
         data, error, command = self.ask(0x13, params)
         return error
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def x14(self):
         """ Установка параметров обмена
             Команда: 14H. Длина сообщения: 8 байт.
@@ -688,6 +692,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def x15(self):
         """ Чтение параметров обмена
             Команда: 15H. Длина сообщения: 6 байт.
@@ -700,6 +705,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def x16(self):
         """ Технологическое обнуление
             Команда: 16H. Длина сообщения: 1 байт.
@@ -785,6 +791,7 @@ class KKT(BaseKKT):
         operator = ord(data[0])
         return operator
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def x19(self):
         """ Тестовый прогон
             Команда: 19H. Длина сообщения: 6 байт.
@@ -840,6 +847,7 @@ class KKT(BaseKKT):
 
         return int2.unpack(data[1:])
 
+    # Not implemented
     def x1C(self):
         """ Запись лицензии
             Команда: 1CH. Длина сообщения: 10 байт.
@@ -850,6 +858,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x1D(self):
         """ Чтение лицензии
             Команда: 1DH. Длина сообщения: 5 байт.
@@ -885,6 +894,7 @@ class KKT(BaseKKT):
         data, error, command = self.ask(command, params)
         return error
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def x1F(self):
         """ Чтение таблицы
             Команда: 1FH. Длина сообщения: 9 байт.
@@ -898,6 +908,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x20(self):
         """ Запись положения десятичной точки
             Команда: 20H. Длина сообщения: 6 байт.
@@ -964,6 +975,7 @@ class KKT(BaseKKT):
         data, error, command = self.ask(command, params)
         return error
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def x24(self):
         """ Инициализация таблиц начальными значениями
             Команда: 24H. Длина сообщения: 5 байт.
@@ -991,6 +1003,7 @@ class KKT(BaseKKT):
         operator = ord(data[0])
         return operator
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def x26(self):
         """ Прочитать параметры шрифта
             Команда: 26H. Длина сообщения: 6 байт.
@@ -1007,6 +1020,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def x27(self):
         """ Общее гашение
             Команда: 27H. Длина сообщения: 5 байт.
@@ -1016,6 +1030,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def x28(self):
         """ Открыть денежный ящик
             Команда: 28H. Длина сообщения: 6 байт.
@@ -1057,6 +1072,7 @@ class KKT(BaseKKT):
         operator = ord(data[0])
         return operator
 
+    # Not implemented
     def x2A(self):
         """ Выброс подкладного документа
             Команда: 2AH. Длина сообщения: 6 байт.
@@ -1069,6 +1085,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def x2B(self):
         """ Прерывание тестового прогона
             Команда: 2BH. Длина сообщения: 5 байт.
@@ -1079,6 +1096,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def x2C(self):
         """ Снятие показаний операционных регистров
             Команда: 2СH. Длина сообщения: 5 байт.
@@ -1089,6 +1107,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def x2D(self):
         """ Запрос структуры таблицы
             Команда: 2DH. Длина сообщения: 6 байт.
@@ -1102,6 +1121,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def x2E(self):
         """ Запрос структуры поля
             Команда: 2EH. Длина сообщения: 7 байт.
@@ -1118,6 +1138,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def x2F(self):
         """ Печать строки данным шрифтом
             Команда: 2FH. Длина сообщения: 47 байт.
@@ -1166,6 +1187,7 @@ class KKT(BaseKKT):
         operator = ord(data[0])
         return operator
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def x42(self):
         """ Отчѐт по секциям
             Команда: 42H. Длина сообщения: 5 байт.
@@ -1176,6 +1198,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def x43(self):
         """ Отчѐт по налогам
             Команда: 43H. Длина сообщения: 5 байт.
@@ -1186,6 +1209,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def x44(self):
         """ Отчёт по кассирам
             Команда: 44H. Длина сообщения: 5 байт.
@@ -1197,6 +1221,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x45(self):
         """ Отчёт почасовой
             Команда: 45H. Длина сообщения: 5 байт.
@@ -1208,6 +1233,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x46(self):
         """ Отчёт по товарам
             Команда: 46H. Длина сообщения: 5 байт.
@@ -1219,6 +1245,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x4A(self):
         """ Добавить или обновить товар в базе товаров
             Команда: 4AH. Длина сообщения: от 17 до 71 байт..
@@ -1238,6 +1265,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x4B(self):
         """ Считать товар из базы товаров
             Команда: 4BH. Длина сообщения: 7 байт.
@@ -1257,6 +1285,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x4C(self):
         """ Удалить товар в базе товаров
             Команда: 4CH. Длина сообщения: 7 байт.
@@ -1269,6 +1298,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x4D(self):
         """ Печать графики-512 с масштабированием
             Команда: 4DH. Длина сообщения: 12 байт.
@@ -1288,6 +1318,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x4E(self):
         """ Загрузка графики-512
             Команда: 4EH. Длина сообщения: 11+X байт.
@@ -1309,6 +1340,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x4F(self):
         """ Печать графики с масштабированием
             Команда: 4FH. Длина сообщения: 9 байт.
@@ -1387,6 +1419,7 @@ class KKT(BaseKKT):
         operator = ord(data[0])
         return operator
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def x53(self):
         """ Конец Документа
             Команда: 53H. Длина сообщения: 6 байт.
@@ -1400,6 +1433,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def x54(self):
         """ Печать рекламного текста
             Команда: 54H. Длина сообщения:5 байт.
@@ -1410,6 +1444,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def x60(self):
         """ Ввод заводского номера
             Команда: 60H. Длина сообщения: 9 байт.
@@ -1420,6 +1455,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x61(self):
         """ Инициализация ФП
             Команда: 61H. Длина сообщения: 1 байт.
@@ -1475,6 +1511,7 @@ class KKT(BaseKKT):
 
         return result
 
+    # Not implemented
     def x63(self):
         """ Запрос даты последней записи в ФП
             Команда: 63H. Длина сообщения: 5 байт.
@@ -1489,6 +1526,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x64(self):
         """ Запрос диапазона дат и смен
             Команда: 64H. Длина сообщения: 5 байт.
@@ -1502,6 +1540,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x65(self):
         """ Фискализация (перерегистрация)
             Команда: 65H. Длина сообщения: 20 байт.
@@ -1518,6 +1557,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x66(self):
         """ Фискальный отчет по диапазону дат
             Команда: 66H. Длина сообщения: 12 байт.
@@ -1534,6 +1574,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x67(self):
         """ Фискальный отчет по диапазону смен
             Команда: 67H. Длина сообщения: 10 байт.
@@ -1550,6 +1591,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x68(self):
         """ Прерывание полного отчета
             Команда: 68H. Длина сообщения: 5 байт.
@@ -1559,6 +1601,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x69(self):
         """ Чтение параметров фискализации (перерегистрации)
             Команда: 69H. Длина сообщения: 6 байт.
@@ -1576,6 +1619,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x6A(self):
         """ Проверка накопителя ФП на сбойные записи
             Команда: 6AH. Длина сообщения: 6 байт.
@@ -1593,6 +1637,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x6B(self):
         """ Возврат названия ошибки
             Команда: 6BH. Длина сообщения: 2 байта.
@@ -1603,6 +1648,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x70(self):
         """ Открыть фискальный подкладной документ
             Команда: 70H. Длина сообщения: 26 байт.
@@ -1640,6 +1686,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x71(self):
         """ Открыть стандартный фискальный подкладной документ
             Команда: 71H. Длина сообщения: 13 байт.
@@ -1665,6 +1712,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x72(self):
         """ Формирование операции на подкладном документе
             Команда: 72H. Длина сообщения: 82 байта.
@@ -1711,6 +1759,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x73(self):
         """ Формирование стандартной операции на подкладном
                 документе
@@ -1731,6 +1780,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x74(self):
         """ Формирование скидки/надбавки на подкладном документе
             Команда: 74H. Длина сообщения: 68 байт.
@@ -1762,6 +1812,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x75(self):
         """ Формирование стандартной скидки/надбавки на
                 подкладном документе
@@ -1782,6 +1833,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x76(self):
         """ Формирование закрытия чека на подкладном документе
             Команда: 76H. Длина сообщения: 182 байта.
@@ -2012,6 +2064,7 @@ class KKT(BaseKKT):
         }
         return result
 
+    # Not implemented
     def x78(self):
         """ Конфигурация подкладного документа
             Команда: 78H. Длина сообщения: 209 байт.
@@ -2039,6 +2092,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x79(self):
         """ Установка стандартной конфигурации подкладного
                 документа
@@ -2050,6 +2104,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x7A(self):
         """ Заполнение буфера подкладного документа нефискальной
                 информацией
@@ -2066,6 +2121,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x7B(self):
         """ Очистка строки буфера подкладного документа от
                 нефискальной информации
@@ -2078,6 +2134,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x7C(self):
         """ Очистка всего буфера подк ладного документа от
                 нефискальной информации
@@ -2089,6 +2146,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x7D(self):
         """ Печать подкладного документа
             Команда: 7DH. Длина сообщения: 7 байт.
@@ -2104,6 +2162,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x7E(self):
         """ Общая конфигурация подкладного документа
             Команда: 7EH. Длина сообщения: 11 байт.
@@ -2529,6 +2588,7 @@ class KKT(BaseKKT):
         operator = ord(data[0])
         return operator
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def x8E(self):
         """ Закрытие чека расширенное
             Команда: 8EH. Длина сообщения: 71+12*5=131 байт.
@@ -2563,6 +2623,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x90(self):
         """ Формирование чека отпуска нефтепродуктов в режиме
             предоплаты заданной дозы
@@ -2586,6 +2647,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x91(self):
         """ Формирование чека отпуска нефтепродуктов в режиме
                 предоплаты на заданную сумму
@@ -2608,6 +2670,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x92(self):
         """ Формирование чека коррекции при неполном отпуске
                 нефтепродуктов
@@ -2629,6 +2692,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x93(self):
         """ Задание дозы РК в миллилитрах
             Команда: 93H. Длина сообщения: 11 байт.
@@ -2646,6 +2710,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x94(self):
         """ Задание дозы РК в денежных единицах
             Команда: 94H. Длина сообщения: 12 байт.
@@ -2661,6 +2726,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x95(self):
         """ Продажа нефтепродуктов
             Команда: 95H. Длина сообщения: 52 байта.
@@ -2679,6 +2745,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x96(self):
         """ Останов РК
             Команда: 96H. Длина сообщения: 7 байт.
@@ -2691,6 +2758,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x97(self):
         """ Пуск РК
             Команда: 97H. Длина сообщения: 7 байт.
@@ -2703,6 +2771,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x98(self):
         """ Сброс РК
             Команда: 98H. Длина сообщения: 7 байт.
@@ -2715,6 +2784,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x99(self):
         """ Сброс всех ТРК
             Команда: 99H. Длина сообщения: 5 байт.
@@ -2725,6 +2795,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x9A(self):
         """ Задание параметров РК
             Команда: 9AH. Длина сообщения: 13 байт.
@@ -2739,6 +2810,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x9B(self):
         """ Считать литровый суммарный счетчик
             Команда: 9BH. Длина сообщения: 7 байт.
@@ -2752,6 +2824,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x9E(self):
         """ Запрос текущей дозы РК
             Команда: 9EH. Длина сообщения: 7 байт.
@@ -2765,6 +2838,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def x9F(self):
         """ Запрос состояния РК
             Команда: 9FH. Длина сообщения: 7 байт.
@@ -2821,6 +2895,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xA0(self):
         """ Отчет ЭКЛЗ по отделам в заданном диапазоне дат
             Команда: A0H. Длина сообщения: 13 байт.
@@ -2836,6 +2911,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xA1(self):
         """ Отчет ЭКЛЗ по отделам в заданном диапазоне номеров
                 смен
@@ -2852,6 +2928,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xA2(self):
         """ Отчет ЭКЛЗ по закрытиям смен в заданном диапазоне дат
             Команда: A2H. Длина сообщения: 12 байт.
@@ -2866,6 +2943,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xA3(self):
         """ Отчет ЭКЛЗ по закрытиям смен в заданном диапазоне
                 номеров смен
@@ -2896,6 +2974,7 @@ class KKT(BaseKKT):
         data, error, command = self.ask(command, params)
         return True
 
+    # Not implemented
     def xA5(self):
         """ Платежный документ из ЭКЛЗ по номеру КПК
             Команда: A5H. Длина сообщения: 9 байт.
@@ -2908,6 +2987,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xA6(self):
         """ Контрольная лента из ЭКЛЗ по номеру смены
             Команда: A6H. Длина сообщения: 7 байт.
@@ -2933,6 +3013,7 @@ class KKT(BaseKKT):
         data, error, command = self.ask(command, params)
         return error
 
+    # Not implemented
     def xA8(self):
         """ Итог активизации ЭКЛЗ
             Команда: A8H. Длина сообщения: 5 байт.
@@ -2946,6 +3027,7 @@ class KKT(BaseKKT):
         # data, error, command = self.ask(command, params)
         # return error
 
+    # Not implemented
     def xA9(self):
         """ Активизация ЭКЛЗ
             Команда: A9H. Длина сообщения: 5 байт.
@@ -2959,6 +3041,7 @@ class KKT(BaseKKT):
         # data, error, command = self.ask(command, params)
         # return error
 
+    # Not implemented
     def xAA(self):
         """ Закрытие архива ЭКЛЗ
             Команда: AAH. Длина сообщения: 5 байт.
@@ -2985,6 +3068,7 @@ class KKT(BaseKKT):
         data, error, command = self.ask(command, params)
         return int5.unpack(data[:5])
 
+    # Not implemented
     def xAC(self):
         """ Прекращение ЭКЛЗ
             Команда: ACH. Длина сообщения: 5 байт.
@@ -2994,6 +3078,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xAD(self):
         """ Запрос состояния по коду 1 ЭКЛЗ
             Команда: ADH. Длина сообщения: 5 байт.
@@ -3013,10 +3098,11 @@ class KKT(BaseKKT):
                 выше.
         """
         raise NotImplementedError()
-        command = 0xAD
-        params = self.admin_password
-        data, error, command = self.ask(command, params)
+        # command = 0xAD
+        # params = self.admin_password
+        # data, error, command = self.ask(command, params)
 
+    # Not implemented
     def xAE(self):
         """ Запрос состояния по коду 2 ЭКЛЗ
             Команда: AEH. Длина сообщения: 5 байт.
@@ -3030,10 +3116,11 @@ class KKT(BaseKKT):
                 Итог возвратов покупок (6 байт) 000000000000...999999999999
         """
         raise NotImplementedError()
-        command = 0xAE
-        params = self.admin_password
-        data, error, command = self.ask(command, params)
+        # command = 0xAE
+        # params = self.admin_password
+        # data, error, command = self.ask(command, params)
 
+    # Not implemented
     def xAF(self):
         """ Тест целостности архива ЭКЛЗ
             Команда: AFH. Длина сообщения: 5 байт.
@@ -3041,10 +3128,10 @@ class KKT(BaseKKT):
             Ответ: AFH. Длина сообщения: 2 байта.
                 Код ошибки (1 байт)
         """
-        command = 0xAF
-        params = self.admin_password
-        data, error, command = self.ask(command, params)
-        return error
+        # command = 0xAF
+        # params = self.admin_password
+        # data, error, command = self.ask(command, params)
+        # return error
 
     def xB0(self, admin_password=None):
         """ Продолжение печати
@@ -3104,6 +3191,7 @@ class KKT(BaseKKT):
         data, error, command = self.ask(command, params)
         return data.decode(CODE_PAGE)
 
+    # Not implemented
     def xB4(self):
         """ Запрос контрольной ленты ЭКЛЗ
             Команда: B4H. Длина сообщения: 7 байт.
@@ -3115,6 +3203,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xB5(self):
         """ Запрос документа ЭКЛЗ
             Команда: B5H. Длина сообщения: 9 байт.
@@ -3128,6 +3217,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xB6(self):
         """ Запрос отчѐта ЭКЛЗ по отделам в заданном диапазоне дат
             Команда: B6H. Длина сообщения: 13 байт.
@@ -3145,6 +3235,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xB7(self):
         """ Запрос отчѐта ЭКЛЗ по отделам в заданном диапазоне
                 номеров смен
@@ -3163,6 +3254,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xB8(self):
         """ Запрос отчѐта ЭКЛЗ по закрытиям смен в заданном
                 диапазоне дат
@@ -3180,6 +3272,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xB9(self):
         """ Запрос отчѐта ЭКЛЗ по закрытиям смен в заданном диапазоне
                 номеров смен.
@@ -3213,6 +3306,7 @@ class KKT(BaseKKT):
         kkm = data.decode(CODE_PAGE)
         return kkm
 
+    # Not implemented
     def xBB(self):
         """ Запрос итога активизации ЭКЛЗ
             Команда: BBH. Длина сообщения: 5 байт.
@@ -3223,6 +3317,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xBC(self):
         """ Вернуть ошибку ЭКЛЗ
             Команда: BCH. Длина сообщения: 6 байт.
@@ -3236,6 +3331,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xBD(self):
         """ Запрос состояния по коду 3 ЭКЛЗ
             Команда: BDH. Длина сообщения: 5 байт.
@@ -3247,6 +3343,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xC0(self):
         """ Загрузка графики
             Команда: C0H. Длина сообщения: 46 байт.
@@ -3259,6 +3356,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xC1(self):
         """ Печать графики
             Команда: C1H. Длина сообщения: 7 байт.
@@ -3288,6 +3386,7 @@ class KKT(BaseKKT):
         operator = ord(data[0])
         return operator
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xC3(self):
         """ Печать расширенной графики
             Команда: C3H. Длина сообщения: 9 байт.
@@ -3300,6 +3399,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xC4(self):
         """ Загрузка расширенной графики
             Команда: C4H. Длина сообщения: 47 байт.
@@ -3312,6 +3412,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xC5(self):
         """ Печать графической линии (одномерный штрихкод)
             Команда: C5H. Длина сообщения: 7+Y или 7+1+Y байт.
@@ -3330,6 +3431,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xC6(self):
         """ Суточный отчет с гашением в буфер
             Команда: C6H. Длина сообщения: 5 байт.
@@ -3340,6 +3442,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xC7(self):
         """ Распечатать отчет из буфера
             Команда: C7H. Длина сообщения: 5 байт.
@@ -3350,6 +3453,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xC8(self):
         """ Запрос количества строк в буфере печати
             Команда: C8H. Длина сообщения: 5 байт.
@@ -3361,6 +3465,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xC9(self):
         """ Получить строку буфера печати
             Команда: C9H. Длина сообщения: 7 байт.
@@ -3383,6 +3488,7 @@ class KKT(BaseKKT):
         data, error, command = self.ask(command)
         return error
 
+    # Not implemented
     def xCB(self):
         """ Печать штрих-кода средствами принтера
             Команда: CBH. Длина сообщения: 57 байт или менее.
@@ -3422,6 +3528,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xCC(self):
         """ Закрытие чека с возвратом КПК
             Команда: ССH. Длина сообщения: 71 или 40+Y байт.
@@ -3447,6 +3554,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xCD(self):
         """ Чтение параметров активизации ЭКЛЗ
             Команда: СDH. Длина сообщения: 6 байт.
@@ -3460,6 +3568,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xCE(self):
         """ Получить случайную последовательность
             Команда: СEH. Длина сообщения: 5 байт.
@@ -3471,6 +3580,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xCF(self):
         """ Аутентификация
             Команда: СFH. Длина сообщения: 21 байт.
@@ -3490,6 +3600,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xD0(self):
         """ Запрос состояния ФР IBM длинный
             Команда: D0H. Длина сообщения: 5 байт.
@@ -3522,6 +3633,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xD1(self):
         """ Запрос состояния ФР IBM короткий
             Команда: D1H. Длина сообщения: 5 байт.
@@ -3536,6 +3648,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xD2(self):
         """ Запрос короткого отчета по диапазону смен
             Команда: D2H. Длина сообщения: 9 байт.
@@ -3558,6 +3671,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xD3(self):
         """ Запрос короткого отчета по диапазону дат
             Команда: D3H. Длина сообщения:11 байт.
@@ -3580,6 +3694,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xD4(self):
         """ Запрос состояния по коду 3 ЭКЛЗ
             Команда: D4H. Длина сообщения: 5 байт.
@@ -3591,6 +3706,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xD5(self):
         """ Запрос состояния по коду 4 ЭКЛЗ
             Команда: D5H. Длина сообщения: 5 байт.
@@ -3603,6 +3719,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xDB(self):
         """ Запрос строки буфера отчета
             Команда: DBH. Длина сообщения: 7 байт.
@@ -3616,6 +3733,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xDC(self):
         """ Очистка буфера отчетов
             Команда: DCH. Длина сообщения: 5 байт.
@@ -3631,6 +3749,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xDD(self):
         """ Загрузка данных
             Команда: DDH. Длина сообщения: 71 байт.
@@ -3644,6 +3763,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xDE(self):
         """ Печать многомерного штрих -кода
             Команда: DEH. Длина сообщения: 15 байт.
@@ -3665,6 +3785,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xDF(self):
         """ Операции с контрольной лентой
             Команда: DFH. Длина сообщения: 6 байт.
@@ -3750,6 +3871,7 @@ class KKT(BaseKKT):
         operator = ord(data[0])
         return operator
 
+    # Not implemented
     def xE4(self):
         """ Печать Реквизита
             Команда: E4H. Длина сообщения: 7-206 байт.
@@ -3769,6 +3891,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xE5(self):
         """ Запрос состояния купюроприемника
             Команда: E5H. Длина сообщения: 5 байт.
@@ -3785,6 +3908,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xE6(self):
         """ Запрос регистров купюроприемника
             Команда: E6H. Длина сообщения: 6 байт.
@@ -3827,6 +3951,7 @@ class KKT(BaseKKT):
         data, error, command = self.ask(command, params)
         return error
 
+    # Not implemented
     def xE9(self):
         """ Установка кода заказчика МФП (команда фазы производства)
             Команда: E9H. Длина сообщения: 6 байт.
@@ -3837,6 +3962,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xEA(self):
         """ Запрос кода разрешения активизации (команда отладочного комплекта)
             Команда: EAH. Длина сообщения: 5 байт.
@@ -3847,6 +3973,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xEB(self):
         """ Подготовка активизации МФП
             Команда: EBH. Длина сообщения: 5 байт.
@@ -3867,6 +3994,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xEC(self):
         """ Ввод кода разрешения активизации
             Команда: ECH. Длина сообщения: 8 байт.
@@ -3878,6 +4006,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xED(self):
         """ Активизация МФП
             Команда: EDH. Длина сообщения: 5 байт.
@@ -3887,6 +4016,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xEE(self):
         """ Запрос результатов команды подготовки активизации
             Команда: EEH. Длина сообщения: 5 байт.
@@ -3907,6 +4037,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xEF(self):
         """ Запрос кода заказчика МФП
             Команда: EFH. Длина сообщения: 5 байт.
@@ -3917,6 +4048,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xF0(self):
         """ Управление заслонкой
             Команда: F0H. Длина сообщения: 6 байт.
@@ -3928,6 +4060,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xF1(self):
         """ Выдать чек
             Команда: F1H. Длина сообщения: 6 байт.
@@ -3942,6 +4075,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xF2(self):
         """ Команда закрытия архива МФП
             Команда: F2H. Длина сообщения: 5 байт.
@@ -3951,6 +4085,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xF3(self):
         """ Установить пароль ЦТО
             Команда: F3H. Длина сообщения: 9 байт.
@@ -3961,6 +4096,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xF7(self):
         """ Расширенный запрос
             Команда: F7H. Длина сообщения: 2+X байта.
@@ -4018,6 +4154,7 @@ class KKT(BaseKKT):
         }
         return result
 
+    # Not implemented
     def xFD(self):
         """ Управление портом дополнительного внешнего устройства
             Команда: FDH. Длина сообщения: (6+X) байт.
@@ -4037,6 +4174,7 @@ class KKT(BaseKKT):
         # Наверное устарело
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF01(self):
         """ Запрос статуса ФН
             Код команды FF01h. Длина сообщения: 6 байт.
@@ -4075,6 +4213,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF02(self):
         """ Запрос номера ФН
             Код команды FF02h. Длина сообщения: 6 байт.
@@ -4085,6 +4224,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF03(self):
         """ Запрос срока действия ФН
             Код команды FF03h. Длина сообщения: 6 байт.
@@ -4095,6 +4235,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF04(self):
         """ Запрос версии ФН
             Код команды FF04h. Длина сообщения: 6 байт.
@@ -4108,6 +4249,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF05(self):
         """ Начать отчет о регистрации ККТ
             Код команды FF05h. Длина сообщения: 7 байт.
@@ -4123,6 +4265,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF06(self):
         """ Сформировать отчёт о регистрации ККТ
             Код команды FF06h. Длина сообщения: 40 байт.
@@ -4138,6 +4281,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF07(self):
         """ Сброс состояния ФН
             Код команды FF07h. Длина сообщения: 7 байт.
@@ -4148,6 +4292,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF08(self):
         """ Отменить документ в ФН
             Код команды FF08h. Длина сообщения: 6 байт.
@@ -4157,6 +4302,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF09(self):
         """ Запрос итогов фискализации
             Код команды FF09h. Длина сообщения: 6 байт.
@@ -4173,6 +4319,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF0A(self):
         """ Найти фискальный документ по номеру
             Код команды FF0Ah. Длина сообщения: 10 байт.
@@ -4189,6 +4336,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xFF0B(self):
         """ Открыть смену в ФН
             Код команды FF0Bh. Длина сообщения: 6 байт.
@@ -4201,6 +4349,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF0C(self):
         """ Передать произвольную TLV структуру
             Код команды FF0Ch. Длина сообщения: 6+N байт.
@@ -4211,6 +4360,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF0D(self):
         """ Операция со скидками и надбавками
             Код команды FF0Dh. Длина сообщения: 254 байт.
@@ -4243,6 +4393,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xFF16(self):
         """ Инициализация EEPROM
             Команда: FF16H. Длина сообщения: 2 байта.
@@ -4252,6 +4403,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xFF1A(self):
         """ Запрос денежных регистров базы товаров
             Команда: FF1AH. Длина сообщения: 8 байт.
@@ -4283,6 +4435,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF34(self):
         """ Сформировать отчёт о перерегистрации ККТ
             Код команды FF34h. Длина сообщения: 7 байт.
@@ -4295,6 +4448,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF35(self):
         """ Начать формирование чека коррекции
             Код команды FF35h. Длина сообщения: 6 байт.
@@ -4304,6 +4458,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF36(self):
         """ Сформировать чек коррекции FF36H
             Код команды FF36h. Длина сообщения: 12 байт.
@@ -4318,6 +4473,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF37(self):
         """ Начать формирование отчёта о состоянии расчётов
             Код команды FF37h. Длина сообщения: 6 байт.
@@ -4327,6 +4483,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF38(self):
         """ Сформировать отчёт о состоянии расчётов
             Код команды FF38h. Длина сообщения: 6 байт.
@@ -4340,6 +4497,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF39(self):
         """ Получить статус информационного обмена
             Код команды FF39h. Длина сообщения: 6 байт.
@@ -4363,6 +4521,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF3A(self):
         """ Запросить фискальный документ в TLV формате
             Код команды FF3Аh. Длина сообщения: 10 байт.
@@ -4375,6 +4534,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF3B(self):
         """ Чтение TLV фискального документа
             Код команды FF3Bh. Длина сообщения: 6 байт.
@@ -4385,6 +4545,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF3C(self):
         """ Запрос квитанции о получении данных в ОФД по номеру документа
             Код команды FF3Сh. Длина сообщения: 11 байт.
@@ -4396,6 +4557,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF3D(self):
         """ Начать закрытие фискального режима
             Код команды FF3Dh. Длина сообщения: 6 байт.
@@ -4405,6 +4567,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF3E(self):
         """ Закрыть фискальный режим
             Код команды FF3Eh. Длина сообщения: 6 байт.
@@ -4416,6 +4579,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF3F(self):
         """ Запрос количества ФД на которые нет квитанции
             Код команды FF3Fh. Длина сообщения: 6 байт.
@@ -4426,6 +4590,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF40(self):
         """ Запрос параметров текущей смены
             Код команды FF40h . Длина сообщения: 6 байт.
@@ -4438,6 +4603,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF41(self):
         """ Начать открытие смены
             Код команды FF41h. Длина сообщения: 6 байт.
@@ -4446,7 +4612,8 @@ class KKT(BaseKKT):
                 Код ошибки: 1 байт
         """
         raise NotImplementedError()
-
+ 
+    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF42(self):
         """ Начать закрытие смены
             Код команды FF42h. Длина сообщения: 6 байт.
@@ -4456,6 +4623,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xFF43(self):
         """ Закрыть смену в ФН
             Код команды FF43h. Длина сообщения: 6 байт.
@@ -4468,6 +4636,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xFF44(self):
         """ Операция со скидками, надбавками и налогом
             Код команды FF44h. Длина сообщения: 254 байт.
@@ -4504,6 +4673,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
+    # Not implemented
     def xFF45(self):
         """ Закрытие чека расширенное вариант No2
             Код команды FF45h. Длина сообщения: 131 байт.
