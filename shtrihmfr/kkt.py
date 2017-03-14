@@ -1,38 +1,39 @@
 # -*- coding: utf-8 -*-
 #
 #  Copyright 2013 Grigoriy Kramarenko <root@rosix.ru>
-#  
+#
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
 #  the Free Software Foundation; either version 3 of the License, or
 #  (at your option) any later version.
-#  
+#
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-#  
+#
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
-#  
-#  
+#
+#
 from __future__ import unicode_literals
 
 import serial
 import time
 import datetime
 
-from .conf import *
-from .protocol import *
-from .utils import *
+from .conf import *  # NOQA
+from .protocol import *  # NOQA
+from .utils import *  # NOQA
 
 # ASCII
-ENQ = chr(0x05) # Enquire. Прошу подтверждения.
-STX = chr(0x02) # Start of Text, начало текста. 
-ACK = chr(0x06) # Acknowledgement. Подтверждаю.
-NAK = chr(0x15) # Negative Acknowledgment, не подтверждаю.
+
+ENQ = chr(0x05)  # Enquire. Прошу подтверждения.
+STX = chr(0x02)  # Start of Text, начало текста.
+ACK = chr(0x06)  # Acknowledgement. Подтверждаю.
+NAK = chr(0x15)  # Negative Acknowledgment, не подтверждаю.
 
 
 class KktError(Exception):
@@ -44,13 +45,11 @@ class KktError(Exception):
             msg = '%s: %s' % (self.source, self.message)
         else:
             msg = value
-
         if PY2:
             try:
                 msg = msg.encode('utf-8')
             except UnicodeError:
                 pass
-
         super(KktError, self).__init__(msg)
 
 
@@ -62,18 +61,18 @@ class BaseKKT(object):
     """
     Базовый класс включает методы непосредственного общения с
     устройством.
-    
+
     Общие положения.
 
-    В информационном обмене «Хост – ККТ» хост является главным 
-    устройством, а ККТ – подчиненным. Поэтому направление 
-    передачи данных определяется хостом. Физический интерфейс 
-    «Хост – ККТ» – последовательный интерфейс RS-232С, без линий 
+    В информационном обмене «Хост – ККТ» хост является главным
+    устройством, а ККТ – подчиненным. Поэтому направление
+    передачи данных определяется хостом. Физический интерфейс
+    «Хост – ККТ» – последовательный интерфейс RS-232С, без линий
     аппаратного квитирования.
     Скорость обмена по интерфейсу RS-232С – 2400, 4800, 9600, 19200,
                                             38400, 57600, 115200.
-    При обмене хост и ККТ оперируют сообщениями. Сообщение может 
-    содержать команду (от хоста) или ответ на команду (от ККТ). 
+    При обмене хост и ККТ оперируют сообщениями. Сообщение может
+    содержать команду (от хоста) или ответ на команду (от ККТ).
     Формат сообщения:
         Байт 0: признак начала сообщения STX;
         Байт 1: длина сообщения (N) – ДВОИЧНОЕ число.
@@ -85,12 +84,12 @@ class BaseKKT(object):
         – вычисляется поразрядным сложением (XOR) всех байтов
         сообщения (кроме байта 0).
 
-    Сообщение считается принятым, если приняты байт STX 
-    и байт длины. Сообщение считается принятым корректно, если 
-    приняты байты сообщения, определенные его байтом длины, и 
+    Сообщение считается принятым, если приняты байт STX
+    и байт длины. Сообщение считается принятым корректно, если
+    приняты байты сообщения, определенные его байтом длины, и
     байт LRC.
-    Каждое принятое сообщение подтверждается передачей 
-    одного байта (ACK – положительное подтверждение, NAK – 
+    Каждое принятое сообщение подтверждается передачей
+    одного байта (ACK – положительное подтверждение, NAK –
     отрицательное подтверждение).
     Ответ NAK свидетельствует об ошибке интерфейса (данные приняты
     с ошибкой или не распознан STX), но не о неверной команде.
@@ -105,30 +104,30 @@ class BaseKKT(object):
     сообщение, отсутствии ответа означает отсутствие связи между
     хостом и ККТ.
 
-    По умолчанию устанавливаются следующие параметры порта: 8 бит 
-    данных, 1 стоп- бит, отсутствует проверка на четность, 
-    скорость обмена 4800 бод и тайм-аут ожидания каждого байта, 
-    равный 50 мс. Две последние характеристики обмена могут быть 
-    изменены командой от хоста. Минимальное время между приемом 
-    последнего байта сообщения и передачей подтверждения, и между 
-    приемом ENQ и реакцией на него равно тайм-ауту приема байта. 
-    Количество повторов при неудачных сеансах связи (нет 
-    подтверждения после передачи команды, отрицательное 
-    подтверждение после передачи команды, данные ответа приняты с 
-    ошибкой или не распознан STX ответа) настраивается при 
-    реализации программного обеспечения хоста. Коды знаков STX, 
+    По умолчанию устанавливаются следующие параметры порта: 8 бит
+    данных, 1 стоп- бит, отсутствует проверка на четность,
+    скорость обмена 4800 бод и тайм-аут ожидания каждого байта,
+    равный 50 мс. Две последние характеристики обмена могут быть
+    изменены командой от хоста. Минимальное время между приемом
+    последнего байта сообщения и передачей подтверждения, и между
+    приемом ENQ и реакцией на него равно тайм-ауту приема байта.
+    Количество повторов при неудачных сеансах связи (нет
+    подтверждения после передачи команды, отрицательное
+    подтверждение после передачи команды, данные ответа приняты с
+    ошибкой или не распознан STX ответа) настраивается при
+    реализации программного обеспечения хоста. Коды знаков STX,
     ENQ, ACK и NAK – коды WIN1251.
 
     """
-    error          = ''
-    port           = DEFAULT_PORT
-    password       = password_prapare(DEFAULT_PASSWORD)
+    error = ''
+    port = DEFAULT_PORT
+    password = password_prapare(DEFAULT_PASSWORD)
     admin_password = password_prapare(DEFAULT_ADMIN_PASSWORD)
-    bod            = DEFAULT_BOD
-    parity         = serial.PARITY_NONE
-    stopbits       = serial.STOPBITS_ONE
-    timeout        = 0.7
-    writeTimeout   = 0.7
+    bod = DEFAULT_BOD
+    parity = serial.PARITY_NONE
+    stopbits = serial.STOPBITS_ONE
+    timeout = 0.7
+    writeTimeout = 0.7
 
     def __init__(self, **kwargs):
         """ Пароли можно передавать в виде набора шестнадцатеричных
@@ -138,9 +137,10 @@ class BaseKKT(object):
         if 'password' in kwargs:
             self.password = password_prapare(kwargs.pop('password'))
         if 'admin_password' in kwargs:
-            self.admin_password = password_prapare(kwargs.pop('admin_password'))
-
-        [ setattr(self, k, v) for k,v in kwargs.items() ]
+            self.admin_password = password_prapare(
+                kwargs.pop('admin_password')
+            )
+        [setattr(self, k, v) for k, v in kwargs.items()]
 
     @property
     def is_connected(self):
@@ -152,9 +152,7 @@ class BaseKKT(object):
         """ Возвращает соединение """
         if hasattr(self, '_conn') and self._conn is not None:
             return self._conn
-
         self.connect()
-
         return self._conn
 
     def connect(self):
@@ -168,8 +166,8 @@ class BaseKKT(object):
                 writeTimeout=self.writeTimeout
             )
         except serial.SerialException:
-            raise ConnectionError('Невозможно соединиться с ККМ (порт=%s)' % self.port)
-
+            raise ConnectionError(
+                'Невозможно соединиться с ККМ (порт=%s)' % self.port)
         return self.check_port()
 
     def disconnect(self):
@@ -202,7 +200,7 @@ class BaseKKT(object):
         """ Проверка на данные """
         answer = self._read(1)
         # Для гарантированного получения ответа стоит обождать
-        # некоторое время, от минимального (0.05 секунд) 
+        # некоторое время, от минимального (0.05 секунд)
         # до 12.8746337890625 секунд по умолчанию для 12 попыток
         n = 0
         timeout = MIN_TIMEOUT
@@ -262,7 +260,7 @@ class BaseKKT(object):
     def read(self):
         """ Считывает весь ответ ККМ """
         answer = self.check_state()
-        if answer == NAK :
+        if answer == NAK:
             i = 0
             while i < MAX_ATTEMPT and not self.check_ACK():
                 i += 1
@@ -278,46 +276,49 @@ class BaseKKT(object):
         if j >= MAX_ATTEMPT:
             self.disconnect()
             raise ConnectionError('Нет связи с устройством')
-        
-        length  = ord(self._read(1))
+
+        length = ord(self._read(1))
         command = self._read(1)
-        error   = self._read(1)
-        data    = self._read(length-2)
+        error = self._read(1)
+        data = self._read(length-2)
         if length-2 != len(data):
             self._write(NAK)
             self.disconnect()
-            msg = 'Длина ответа (%i) не равна длине полученных данных (%i)' % (length, len(data))
+            msg = ('Длина ответа (%i) не равна длине полученных данных (%i)' %
+                   (length, len(data)))
             raise KktError(msg)
 
         control_read = self._read(1)
-        control_summ = get_control_summ(chr(length) + command \
-                                        + error + data)
+        control_summ = get_control_summ(
+            chr(length) + command + error + data
+        )
         if control_read != control_summ:
             self._write(NAK)
             self.disconnect()
-            msg = "Контрольная сумма %i должна быть равна %i " % (ord(control_summ), ord(control_read))
+            msg = ("Контрольная сумма %i должна быть равна %i " %
+                   (ord(control_summ), ord(control_read)))
             raise KktError(msg)
 
         self._write(ACK)
         self._flush()
-        #~ time.sleep(MIN_TIMEOUT*2)
+        # time.sleep(MIN_TIMEOUT*2)
         return {
             'command': command,
-            'error':   ord(error),
-            'data':    data
+            'error': ord(error),
+            'data': data
         }
 
     def send(self, command, params, quick=False):
         """ Стандартная обработка команды """
 
-        #~ self.clear()
+        # self.clear()
 
         if not quick:
             self._flush()
-        data    = chr(command)
-        length  = 1
-        if not params is None:
-            data   += params
+        data = chr(command)
+        length = 1
+        if params is not None:
+            data += params
             length += len(params)
         content = chr(length) + data
         control_summ = get_control_summ(content)
@@ -327,25 +328,25 @@ class BaseKKT(object):
 
         return True
 
-    def ask(self, command, params=None, sleep=0, pre_clear=True,\
-                without_password=False, disconnect=True, quick=False):
+    def ask(self, command, params=None, sleep=0, pre_clear=True,
+            without_password=False, disconnect=True, quick=False):
         """ Высокоуровневый метод получения ответа. Состоит из
-            последовательной цепочки действий. 
-            
+            последовательной цепочки действий.
+
             Возвращает позиционные параметры: (data, error, command)
         """
 
-        #~ raise KktError('Тест ошибки')
+        # raise KktError('Тест ошибки')
 
         if quick:
-            pre_clear  = False
+            # pre_clear = False
             disconnect = False
-            sleep      = 0
+            sleep = 0
 
         if params is None and not without_password:
             params = self.password
-        #~ if pre_clear:
-            #~ self.clear()
+        # if pre_clear:
+            # self.clear()
         self.send(command, params, quick=quick)
         if sleep:
             time.sleep(sleep)
@@ -362,7 +363,6 @@ class BaseKKT(object):
 class KKT(BaseKKT):
     """ Класс с командами, исполняемыми согласно протокола """
 
-## Implemented
     def x01(self, code):
         """ Запрос дампа
             Команда: 01H. Длина сообщения: 6 байт.
@@ -385,7 +385,6 @@ class KKT(BaseKKT):
         data, error, command = self.ask(command, params)
         return data
 
-## Implemented
     def x02(self, code):
         """ Запрос данных
             Команда: 02H. Длина сообщения: 5 байт.
@@ -409,7 +408,6 @@ class KKT(BaseKKT):
         data, error, command = self.ask(command, params)
         return data
 
-## Implemented
     def x03(self):
         """ Прерывание выдачи данных
             Команда: 03H. Длина сообщения: 5 байт.
@@ -436,7 +434,7 @@ class KKT(BaseKKT):
                 Номер последней закрытой смены (2 байта) 0000...2100
                 Дата фискализации (перерегистрации) (3 байта) ДД-ММ-ГГ
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x0E(self):
         """ Ввод длинного заводского номера
@@ -446,7 +444,7 @@ class KKT(BaseKKT):
             Ответ: 0EH. Длина сообщения: 2 байта.
                 Код ошибки (1 байт)
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x0F(self):
         """ Запрос длинного заводского номера и длинного РНМ
@@ -457,9 +455,8 @@ class KKT(BaseKKT):
                 Заводской номер (7 байт) 00000000000000...99999999999999
                 РНМ (7 байт) 00000000000000...99999999999999
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
-## Implemented
     def x10(self):
         """ Короткий запрос состояния ФР
             Команда: 10H. Длина сообщения: 5 байт.
@@ -484,27 +481,28 @@ class KKT(BaseKKT):
         data, error, command = self.ask(command)
 
         # Флаги ККТ
-        kkt_flags = string2bits(data[2] + data[1]) # старший байт и младший байт
-        kkt_flags = [ KKT_FLAGS[i] for i, x in enumerate(kkt_flags) if x ] 
+        # старший байт и младший байт
+        kkt_flags = string2bits(data[2] + data[1])
+        kkt_flags = [KKT_FLAGS[i] for i, x in enumerate(kkt_flags) if x]
         # Количество операций
-        operations = int2.unpack(data[10]+data[5]) # старший байт и младший байт
+        # старший байт и младший байт
+        operations = int2.unpack(data[10]+data[5])
 
         result = {
-            'error':           error,
-            'operator':        ord(data[0]),
-            'kkt_flags':       kkt_flags,
-            'kkt_mode':        ord(data[3]),
-            'kkt_submode':     ord(data[4]),
+            'error': error,
+            'operator': ord(data[0]),
+            'kkt_flags': kkt_flags,
+            'kkt_mode': ord(data[3]),
+            'kkt_submode': ord(data[4]),
             'voltage_battery': ord(data[6]),
-            'voltage_power':   ord(data[7]),
-            'fp_error':        ord(data[8]),
-            'eklz_error':      ord(data[9]),
-            'operations':      operations,
-            'reserve':         data[11:],
+            'voltage_power': ord(data[7]),
+            'fp_error': ord(data[8]),
+            'eklz_error': ord(data[9]),
+            'operations': operations,
+            'reserve': data[11:],
         }
         return result
 
-## Implemented
     def x11(self):
         """ Запрос состояния ФР
             Команда: 11H. Длина сообщения: 5 байт.
@@ -540,22 +538,23 @@ class KKT(BaseKKT):
         data, error, command = self.ask(command)
 
         # Дата ПО ККТ
-        day   = ord(data[5])
+        day = ord(data[5])
         month = ord(data[6])
-        year  = ord(data[7])
+        year = ord(data[7])
         if year > 90:
             kkt_date = datetime.date(1900+year, month, day)
         else:
             kkt_date = datetime.date(2000+year, month, day)
 
         # Флаги ККТ
-        kkt_flags = string2bits(data[12] + data[11]) # старший байт и младший байт
-        kkt_flags = [ KKT_FLAGS[i] for i, x in enumerate(kkt_flags) if x ] 
+        # старший байт и младший байт
+        kkt_flags = string2bits(data[12] + data[11])
+        kkt_flags = [KKT_FLAGS[i] for i, x in enumerate(kkt_flags) if x]
 
         # Дата ПО ФП
-        day   = ord(data[20])
+        day = ord(data[20])
         month = ord(data[21])
-        year  = ord(data[22])
+        year = ord(data[22])
         if year > 90:
             fp_date = datetime.date(1900+year, month, day)
         else:
@@ -567,38 +566,38 @@ class KKT(BaseKKT):
 
         # Флаги ФП
         fp_flags = string2bits(data[29])
-        fp_flags = [ FP_FLAGS[i][x] for i, x in enumerate(fp_flags) ] 
+        fp_flags = [FP_FLAGS[i][x] for i, x in enumerate(fp_flags)]
 
         result = {
-            'error':       error,
-            'operator':    ord(data[0]),
+            'error': error,
+            'operator': ord(data[0]),
             'kkt_version': '%s.%s' % (data[1], data[2]),
-            'kkt_build':   int2.unpack(data[3] + data[4]),
-            'kkt_date':    kkt_date,
-            'hall':        ord(data[8]),
-            'document':    int2.unpack(data[9] + data[10]),
-            'kkt_flags':   kkt_flags,
-            'kkt_mode':    ord(data[13]),
+            'kkt_build': int2.unpack(data[3] + data[4]),
+            'kkt_date': kkt_date,
+            'hall': ord(data[8]),
+            'document': int2.unpack(data[9] + data[10]),
+            'kkt_flags': kkt_flags,
+            'kkt_mode': ord(data[13]),
             'kkt_submode': ord(data[14]),
-            'kkt_port':    ord(data[15]),
-            'fp_version':  '%s.%s' % (data[16], data[17]),
-            'fp_build':    int2.unpack(data[18] + data[19]),
-            'fp_date':     fp_date,
-            'date':        date,
-            'time':        time,
-            'fp_flags':    fp_flags,
-            'serial_number': int4.unpack(data[30] + data[31] \
-                                       + data[32] + data[33]),
+            'kkt_port': ord(data[15]),
+            'fp_version': '%s.%s' % (data[16], data[17]),
+            'fp_build': int2.unpack(data[18] + data[19]),
+            'fp_date': fp_date,
+            'date': date,
+            'time': time,
+            'fp_flags': fp_flags,
+            'serial_number': int4.unpack(data[30] + data[31] +
+                                         data[32] + data[33]),
             'last_closed_session': int2.unpack(data[34] + data[35]),
-            'fp_free_records':     int2.unpack(data[36] + data[37]),
-            'registration_count':  ord(data[38]),
-            'registration_left':   ord(data[39]),
-            'inn':          int6.unpack(data[40] + data[41] + data[42]\
-                                      + data[43] + data[44] + data[45])
+            'fp_free_records': int2.unpack(data[36] + data[37]),
+            'registration_count': ord(data[38]),
+            'registration_left': ord(data[39]),
+            'inn': int6.unpack(
+                data[40] + data[41] + data[42] +
+                data[43] + data[44] + data[45])
         }
         return result
 
-## Implemented multistring for x12
     def x12_loop(self, text='', control_tape=False):
         """ Печать жирной строки без ограничения на 20 символов """
         last_result = None
@@ -607,7 +606,6 @@ class KKT(BaseKKT):
             text = text[20:]
         return last_result
 
-## Implemented
     def x12(self, text='', control_tape=False):
         """ Печать жирной строки
             Команда: 12H. Длина сообщения: 26 байт.
@@ -621,12 +619,13 @@ class KKT(BaseKKT):
         """
         command = 0x12
 
-        flags = 2 # по умолчанию bin(2) == '0b00000010'
+        flags = 2  # по умолчанию bin(2) == '0b00000010'
         if control_tape:
-            flags = 1 # bin(1) == '0b00000001'
+            flags = 1  # bin(1) == '0b00000001'
 
         if len(text) > 20:
-            raise KktError('Длина строки должна быть меньше или равна 20 символов')
+            raise KktError(
+                'Длина строки должна быть меньше или равна 20 символов')
         text = text.encode(CODE_PAGE).ljust(20, chr(0x0))
 
         params = self.password + chr(flags) + text
@@ -635,7 +634,6 @@ class KKT(BaseKKT):
         operator = ord(data[0])
         return operator
 
-## Implemented
     def x13(self):
         """ Гудок
             Команда: 13H. Длина сообщения: 5 байт.
@@ -667,23 +665,23 @@ class KKT(BaseKKT):
                 выдано сообщение об ошибке. Тайм-аут приема байта
                 нелинейный. Диапазон допустимых значений [0...255]
                 распадается на три диапазона:
-                    1. В диапазоне [0...150] каждая единица 
-                    соответствует 1 мс, т.е. данным диапазоном 
+                    1. В диапазоне [0...150] каждая единица
+                    соответствует 1 мс, т.е. данным диапазоном
                     задаются значения тайм-аута от 0 до 150 мс;
-                    2. В диапазоне [151...249] каждая единица 
-                    соответствует 150 мс, т.е. данным диапазоном 
+                    2. В диапазоне [151...249] каждая единица
+                    соответствует 150 мс, т.е. данным диапазоном
                     задаются значения тайм-аута от 300 мс до 15 сек;
-                    3. В диапазоне [250...255] каждая единица 
-                    соответствует 15 сек, т.е. данным диапазоном 
+                    3. В диапазоне [250...255] каждая единица
+                    соответствует 15 сек, т.е. данным диапазоном
                     задаются значения тайм-аута от 30 сек до 105 сек.
 
-                По умолчанию все порты настроены на параметры: 
-                скорость 4800 бод с тайм-аутом 100 мс. Если 
-                устанавливается порт, по которому ведется обмен, то 
-                подтверждение на прием команды и ответное сообщение 
+                По умолчанию все порты настроены на параметры:
+                скорость 4800 бод с тайм-аутом 100 мс. Если
+                устанавливается порт, по которому ведется обмен, то
+                подтверждение на прием команды и ответное сообщение
                 выдаются ККТ со старой скоростью обмена.
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x15(self):
         """ Чтение параметров обмена
@@ -695,7 +693,7 @@ class KKT(BaseKKT):
                 Код скорости обмена (1 байт) 0...6
                 Тайм аут приема байта (1 байт) 0...255
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x16(self):
         """ Технологическое обнуление
@@ -704,18 +702,17 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
 
             Примечание:
-                Технологическое обнуление доступно только после 
-                вскрытия пломбы на кожухе ККТ и выполнения 
-                последовательности действий, описанных в ремонтной 
+                Технологическое обнуление доступно только после
+                вскрытия пломбы на кожухе ККТ и выполнения
+                последовательности действий, описанных в ремонтной
                 документации на ККТ.
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
-## Implemented multistring for x17
     def x17_loop(self, text='', control_tape=False):
         """ Печать строки без ограничения на 36 символов
             В документации указано 40, но 4 символа выходят за область
-            печати на ФРК. 
+            печати на ФРК.
         """
         last_result = None
         while len(text) > 0:
@@ -723,12 +720,11 @@ class KKT(BaseKKT):
             text = text[36:]
         return last_result
 
-## Implemented
     def x17(self, text='', control_tape=False):
         """ Печать строки
             Команда: 17H. Длина сообщения: 46 байт.
                 Пароль оператора (4 байта)
-                Флаги (1 байт) Бит 0 – контрольная лента, Бит 1 – 
+                Флаги (1 байт) Бит 0 – контрольная лента, Бит 1 –
                     чековая лента.
                 Печатаемые символы (40 байт)
             Ответ: 17H. Длина сообщения: 3 байта.
@@ -736,17 +732,18 @@ class KKT(BaseKKT):
                 Порядковый номер оператора (1 байт) 1...30
 
             Примечание:
-                Печатаемые символы – символы в кодовой странице 
+                Печатаемые символы – символы в кодовой странице
                 WIN1251. Символы с кодами 0..31 не отображаются.
         """
         command = 0x17
 
-        flags = 2 # по умолчанию bin(2) == '0b00000010'
+        flags = 2  # по умолчанию bin(2) == '0b00000010'
         if control_tape:
-            flags = 1 # bin(1) == '0b00000001'
+            flags = 1  # bin(1) == '0b00000001'
 
         if len(text) > 40:
-            raise KktError('Длина строки должна быть меньше или равна 40 символов')
+            raise KktError(
+                'Длина строки должна быть меньше или равна 40 символов')
         text = text.encode(CODE_PAGE).ljust(40, chr(0x0))
 
         params = self.password + chr(flags) + text
@@ -755,7 +752,6 @@ class KKT(BaseKKT):
         operator = ord(data[0])
         return operator
 
-## Implemented
     def x18(self, text, number=1):
         """ Печать заголовка документа
             Команда: 18H. Длина сообщения: 37 байт.
@@ -768,16 +764,17 @@ class KKT(BaseKKT):
                 Сквозной номер документа (2 байта)
 
             Примечание:
-                Печатаемые символы – символы в кодовой странице 
+                Печатаемые символы – символы в кодовой странице
                 WIN1251. Символы с кодами 0..31 не отображаются.
         """
         command = 0x18
 
         if len(text) > 30:
-            raise 'Длина строки должна быть меньше или равна 30 символов'
+            raise KktError(
+                'Длина строки должна быть меньше или равна 30 символов')
         text = text.encode(CODE_PAGE).ljust(30, chr(0x0))
 
-        params = self.password + text + chr(flags) 
+        params = self.password + text + chr(flags)
 
         data, error, command = self.ask(command, params)
         operator = ord(data[0])
@@ -792,9 +789,8 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
-## Implemented
     def x1A(self):
         """ Запрос денежного регистра
             Команда: 1AH. Длина сообщения: 6 байт.
@@ -804,20 +800,23 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
                 Содержимое регистра (6 байт)
-        
+
         Пример запроса:
-            integer2money(int6.unpack(kkt.ask(0x1A, kkt.password + chr(121))[0][1:]))
+            integer2money(
+                int6.unpack(
+                    kkt.ask(0x1A, kkt.password + chr(121))[0][1:]
+                )
+            )
         """
-        
+
         command = 0x1A
 
-        params = self.password + chr(number) 
+        params = self.password + chr(number)
 
         data, error, command = self.ask(command, params)
 
         return integer2money(int6.unpack(data[1:]))
 
-## Implemented
     def x1B(self):
         """ Запрос операционного регистра
             Команда: 1BH. Длина сообщения: 6 байт.
@@ -830,7 +829,7 @@ class KKT(BaseKKT):
         """
         command = 0x1B
 
-        params = self.password + chr(number) 
+        params = self.password + chr(number)
 
         data, error, command = self.ask(command, params)
 
@@ -844,7 +843,7 @@ class KKT(BaseKKT):
             Ответ: 1CH. Длина сообщения: 2 байта.
                 Код ошибки (1 байт)
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x1D(self):
         """ Чтение лицензии
@@ -854,9 +853,8 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Лицензия (5 байт) 0000000000...9999999999
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
-## Implemented
     def x1E(self, table, row, field, value):
         """ Запись таблицы
             Команда: 1EH. Длина сообщения: (9+X) байт.
@@ -874,7 +872,7 @@ class KKT(BaseKKT):
         command = 0x1E
 
         table = chr(table)
-        row   = int2.pack(row)
+        row = int2.pack(row)
         field = chr(field)
 
         params = self.admin_password + table + row + field + value
@@ -893,20 +891,20 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Значение (X байт) до 40 байт
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x20(self):
         """ Запись положения десятичной точки
             Команда: 20H. Длина сообщения: 6 байт.
                 Пароль системного администратора (4 байта)
-                Положение десятичной точки (1 байт) «0»– 0 разряд, «1»– 2 разряд
+                Положение десятичной точки (1 байт) «0» – 0 разряд,
+                                                    «1» – 2 разряд
             Ответ: 20H. Длина сообщения: 2 байта.
                 Код ошибки (1 байт)
 
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
-## Implemented
     def x21(self, hour, minute, second):
         """ Программирование времени
             Команда: 21H. Длина сообщения: 8 байт.
@@ -916,14 +914,13 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
         """
         command = 0x21
-        hour    = chr(hour)
-        minute  = chr(minute)
-        second  = chr(second)
-        params  = self.admin_password + hour + minute + second
+        hour = chr(hour)
+        minute = chr(minute)
+        second = chr(second)
+        params = self.admin_password + hour + minute + second
         data, error, command = self.ask(command, params)
         return error
 
-## Implemented
     def x22(self, year, month, day):
         """ Программирование даты
             Команда: 22H. Длина сообщения: 8 байт.
@@ -933,18 +930,17 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
         """
         command = 0x22
-        
+
         if year >= 2000:
             year = year - 2000
 
-        year    = chr(year)
-        month   = chr(month)
-        day     = chr(day)
-        params  = self.admin_password + day + month + year
+        year = chr(year)
+        month = chr(month)
+        day = chr(day)
+        params = self.admin_password + day + month + year
         data, error, command = self.ask(command, params)
         return error
 
-## Implemented
     def x23(self, year, month, day):
         """ Подтверждение программирования даты
             Команда: 23H. Длина сообщения: 8 байт.
@@ -956,10 +952,10 @@ class KKT(BaseKKT):
         command = 0x23
         if year >= 2000:
             year = year - 2000
-        year    = chr(year)
-        month   = chr(month)
-        day     = chr(day)
-        params  = self.admin_password + day + month + year
+        year = chr(year)
+        month = chr(month)
+        day = chr(day)
+        params = self.admin_password + day + month + year
         data, error, command = self.ask(command, params)
         return error
 
@@ -970,9 +966,8 @@ class KKT(BaseKKT):
             Ответ: 24H. Длина сообщения: 2 байта.
                 Код ошибки (1 байт)
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
-## Implemented
     def x25(self, fullcut=True):
         """ Отрезка чека
             Команда: 25H. Длина сообщения: 6 байт.
@@ -984,7 +979,7 @@ class KKT(BaseKKT):
         """
         command = 0x25
 
-        cut = int(not bool(fullcut)) # 0 по умолчанию
+        cut = int(not bool(fullcut))  # 0 по умолчанию
 
         params = self.password + chr(cut)
         data, error, command = self.ask(command, params)
@@ -999,11 +994,13 @@ class KKT(BaseKKT):
             Ответ: 26H. Длина сообщения: 7 байт.
                 Код ошибки (1 байт)
                 Ширина области печати в точках (2 байта)
-                Ширина символа с учетом межсимвольного интервала в точках (1 байт)
-                Высота символа с учетом межстрочного интервала в точках (1 байт)
+                Ширина символа с учетом межсимвольного интервала в точках
+                    (1 байт)
+                Высота символа с учетом межстрочного интервала в точках
+                    (1 байт)
                 Количество шрифтов в ККТ (1 байт)
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x27(self):
         """ Общее гашение
@@ -1012,7 +1009,7 @@ class KKT(BaseKKT):
             Ответ: 27H. Длина сообщения: 2 байта.
                 Код ошибки (1 байт)
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x28(self):
         """ Открыть денежный ящик
@@ -1023,9 +1020,8 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
-## Implemented
     def x29(self, receipt_tape=False, control_tape=False, row_count=1):
         """ Протяжка
             Команда: 29H. Длина сообщения: 7 байт.
@@ -1041,16 +1037,17 @@ class KKT(BaseKKT):
         """
         command = 0x29
 
-        flags = 4 # по умолчанию bin(4) == '0b00000100'
+        flags = 4  # по умолчанию подкладной документ bin(4) == '0b00000100'
         if receipt_tape:
-            tape = 2 # bin(2) == '0b00000010'
+            flags = 2  # bin(2) == '0b00000010'
         if control_tape:
-            tape = 1 # bin(1) == '0b00000001'
+            flags = 1  # bin(1) == '0b00000001'
 
         if row_count < 1 or row_count > 255:
-            raise KktError("Количество строк должно быть в диапазоне между 1 и 255")
+            raise KktError(
+                "Количество строк должно быть в диапазоне между 1 и 255")
 
-        params  = self.password + chr(flags) + chr(row_count)
+        params = self.password + chr(flags) + chr(row_count)
         data, error, command = self.ask(command, params)
         operator = ord(data[0])
         return operator
@@ -1059,12 +1056,13 @@ class KKT(BaseKKT):
         """ Выброс подкладного документа
             Команда: 2AH. Длина сообщения: 6 байт.
                 Пароль оператора (4 байта)
-                Направление выброса подкладного документа (1 байт) «0» – вниз, «1» – вверх
+                Направление выброса подкладного документа (1 байт) «0» – вниз,
+                                                                   «1» – вверх
             Ответ: 2AH. Длина сообщения: 3 байта.
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x2B(self):
         """ Прерывание тестового прогона
@@ -1074,7 +1072,7 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x2C(self):
         """ Снятие показаний операционных регистров
@@ -1084,7 +1082,7 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 29, 30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x2D(self):
         """ Запрос структуры таблицы
@@ -1097,7 +1095,7 @@ class KKT(BaseKKT):
                 Количество рядов (2 байта)
                 Количество полей (1 байт)
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x2E(self):
         """ Запрос структуры поля
@@ -1113,7 +1111,7 @@ class KKT(BaseKKT):
                 Минимальное значение поля – для полей типа BIN (X байт)
                 Максимальное значение поля – для полей типа BIN (X байт)
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x2F(self):
         """ Печать строки данным шрифтом
@@ -1128,12 +1126,11 @@ class KKT(BaseKKT):
                 Порядковый номер оператора (1 байт) 1...30
 
             Примечание:
-                Печатаемые символы – символы в кодовой странице 
+                Печатаемые символы – символы в кодовой странице
                 WIN1251. Символы с кодами 0...31 не отображаются.
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
-## Implemented
     def x40(self):
         """ Суточный отчет без гашения
             Команда: 40H. Длина сообщения: 5 байт.
@@ -1144,12 +1141,11 @@ class KKT(BaseKKT):
         """
         command = 0x40
 
-        params  = self.admin_password
+        params = self.admin_password
         data, error, command = self.ask(command, params)
         operator = ord(data[0])
         return operator
 
-## Implemented
     def x41(self):
         """ Суточный отчет с гашением
             Команда: 41H. Длина сообщения: 5 байт.
@@ -1160,7 +1156,7 @@ class KKT(BaseKKT):
         """
         command = 0x41
 
-        params  = self.admin_password
+        params = self.admin_password
         data, error, command = self.ask(command, params)
         operator = ord(data[0])
         return operator
@@ -1173,7 +1169,7 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 29, 30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x43(self):
         """ Отчѐт по налогам
@@ -1183,9 +1179,8 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 29, 30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
-## Implemented
     def x50(self, summa):
         """ Внесение
             Команда: 50H. Длина сообщения: 10 байт.
@@ -1210,7 +1205,6 @@ class KKT(BaseKKT):
         }
         return result
 
-## Implemented
     def x51(self, summa):
         """ Выплата
             Команда: 51H. Длина сообщения: 10 байт.
@@ -1236,7 +1230,6 @@ class KKT(BaseKKT):
         }
         return result
 
-## Implemented
     def x52(self):
         """ Печать клише
             Команда: 52H. Длина сообщения: 5 байт.
@@ -1247,7 +1240,7 @@ class KKT(BaseKKT):
         """
         command = 0x52
 
-        params  = self.password
+        params = self.password
         data, error, command = self.ask(command, params)
         operator = ord(data[0])
         return operator
@@ -1263,7 +1256,7 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x54(self):
         """ Печать рекламного текста
@@ -1273,7 +1266,7 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x60(self):
         """ Ввод заводского номера
@@ -1283,7 +1276,7 @@ class KKT(BaseKKT):
             Ответ: 60H. Длина сообщения: 2 байта.
                 Код ошибки (1 байт)
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x61(self):
         """ Инициализация ФП
@@ -1292,14 +1285,13 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
 
             Примечание:
-                Команда доступна только в случае установки в ФП 
-                процессора с программным обеспечением для 
-                инициализации и используется в технологических целях 
+                Команда доступна только в случае установки в ФП
+                процессора с программным обеспечением для
+                инициализации и используется в технологических целях
                 при производстве ККМ на заводе-изготовителе.
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
-## Implemented
     def x62(self, after=False):
         """ Запрос суммы записей в ФП
             Команда: 62H. Длина сообщения: 6 байт.
@@ -1311,15 +1303,18 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 29, 30
                 Сумма всех сменных итогов продаж (8 байт)
-                Сумма всех сменных итогов покупок (6 байт) При отсутствии ФП 2:
-                    FFh FFh FFh FFh FFh FFh
-                Сумма всех сменных возвратов продаж (6 байт) При отсутствии ФП 2:
-                    FFh FFh FFh FFh FFh FFh
-                Сумма всех сменных возвратов покупок (6 байт) При отсутствии ФП 2:
-                    FFh FFh FFh FFh FFh FFh
+                Сумма всех сменных итогов покупок (6 байт)
+                    При отсутствии ФП 2:
+                        FFh FFh FFh FFh FFh FFh
+                Сумма всех сменных возвратов продаж (6 байт)
+                    При отсутствии ФП 2:
+                        FFh FFh FFh FFh FFh FFh
+                Сумма всех сменных возвратов покупок (6 байт)
+                    При отсутствии ФП 2:
+                        FFh FFh FFh FFh FFh FFh
         """
         command = 0x62
-        params  = self.admin_password + chr(1 if after else 0)
+        params = self.admin_password + chr(1 if after else 0)
         data, error, command = self.ask(command, params)
 
         result = {
@@ -1330,7 +1325,7 @@ class KKT(BaseKKT):
             'refuse_purchase': integer2money(int6.unpack(data[21:])),
         }
 
-        # Если ФП 2 установлена, то почемуто вовращает предельное число.
+        # Если ФП 2 установлена, то почему-то вовращает предельное число.
         # Поэтому мы его сбрасываем.
         for key in ('purchase', 'refuse_sale', 'refuse_purchase'):
             if result[key] == 2814749767106.55:
@@ -1350,7 +1345,7 @@ class KKT(BaseKKT):
                     (перерегистрация), «1» – сменный итог
                 Дата (3 байта) ДД-ММ-ГГ
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x64(self):
         """ Запрос диапазона дат и смен
@@ -1363,7 +1358,7 @@ class KKT(BaseKKT):
                 Номер первой смены (2 байта) 0000...2100
                 Номер последней смены (2 байта) 0000...2100
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x65(self):
         """ Фискализация (перерегистрация)
@@ -1379,7 +1374,7 @@ class KKT(BaseKKT):
                 Номер последней закрытой смены (2 байта) 0000...2100
                 Дата фискализации (перерегистрации) (3 байта) ДД-ММ-ГГ
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x66(self):
         """ Фискальный отчет по диапазону дат
@@ -1395,7 +1390,7 @@ class KKT(BaseKKT):
                 Номер первой смены (2 байта) 0000...2100
                 Номер последней смены (2 байта) 0000...2100
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x67(self):
         """ Фискальный отчет по диапазону смен
@@ -1411,7 +1406,7 @@ class KKT(BaseKKT):
                 Номер первой смены (2 байта) 0000...2100
                 Номер последней смены (2 байта) 0000...2100
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x68(self):
         """ Прерывание полного отчета
@@ -1420,7 +1415,7 @@ class KKT(BaseKKT):
             Ответ: 68H. Длина сообщения: 2 байта.
                 Код ошибки (1 байт)
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x69(self):
         """ Чтение параметров фискализации (перерегистрации)
@@ -1437,7 +1432,7 @@ class KKT(BaseKKT):
                     (2 байта) 0000...2100
                 Дата фискализации (перерегистрации) (3 байта) ДД-ММ-ГГ
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x70(self):
         """ Открыть фискальный подкладной документ
@@ -1445,7 +1440,7 @@ class KKT(BaseKKT):
                 Пароль оператора (4 байта)
                 Тип документа (1 байт) «0» – продажа, «1» – покупка,
                     «2» – возврат продажи, «3» – возврат покупки
-                Дублирование печати (извещение, квитанция) (1 байт) «0» 
+                Дублирование печати (извещение, квитанция) (1 байт) «0»
                     – колонки, «1» – блоки строк
                 Количество дублей (1 байт) 0...5
                 Смещение между оригиналом и 1-ым дублем печати (1 байт) *
@@ -1471,18 +1466,22 @@ class KKT(BaseKKT):
                 Порядковый номер оператора (1 байт) 1...30
                 Сквозной номер документа (2 байта)
 
-            *– Для колонок величина смещения задаѐтся в символах, для 
+            *– Для колонок величина смещения задаѐтся в символах, для
             блоков строк – в строках.
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x71(self):
         """ Открыть стандартный фискальный подкладной документ
             Команда: 71H. Длина сообщения: 13 байт.
                 Пароль оператора (4 байта)
-                Тип документа (1 байт) «0» – продажа, «1» – покупка, «2» – возврат
-                    продажи, «3» – возврат покупки
-                Дублирование печати (извещение, квитанция) (1 байт) «0» – колонки,
+                Тип документа (1 байт)
+                    «0» – продажа,
+                    «1» – покупка,
+                    «2» – возврат продажи,
+                    «3» – возврат покупки
+                Дублирование печати (извещение, квитанция) (1 байт)
+                    «0» – колонки,
                     «1» – блоки строк
                 Количество дублей (1 байт) 0...5
                 Смещение между оригиналом и 1-ым дублем печати (1 байт) *
@@ -1495,18 +1494,22 @@ class KKT(BaseKKT):
                 Порядковый номер оператора (1 байт) 1...30
                 Сквозной номер документа (2 байта)
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x72(self):
         """ Формирование операции на подкладном документе
             Команда: 72H. Длина сообщения: 82 байта.
                 Пароль оператора (4 байта)
-                Формат целого количества (1 байт) «0» – без цифр после запятой, «1» – с цифрами
+                Формат целого количества (1 байт)
+                    «0» – без цифр после запятой,
+                    «1» – с цифрами
                 после запятой
                 Количество строк в операции (1 байт) 1...3
-                Номер текстовой строки в операции (1 байт) 0...3, «0» – не печатать
-                Номер строки произведения количества на цену в операции (1 байт) 0...3, «0» – не
-                печатать
+                Номер текстовой строки в операции (1 байт) 0...3,
+                    «0» – не печатать
+                Номер строки произведения количества на цену в операции
+                (1 байт) 0...3,
+                    «0» – не печатать
                 Номер строки суммы в операции (1 байт) 1...3
                 Номер строки отдела в операции (1 байт) 1...3
                 Номер шрифта текстовой строки (1 байт)
@@ -1537,7 +1540,7 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x73(self):
         """ Формирование стандартной операции на подкладном
@@ -1557,14 +1560,15 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x74(self):
         """ Формирование скидки/надбавки на подкладном документе
             Команда: 74H. Длина сообщения: 68 байт.
                 Пароль оператора (4 байта)
                 Количество строк в операции (1 байт) 1...2
-                Номер текстовой строки в операции (1 байт) 0...2, «0» – не печатать
+                Номер текстовой строки в операции (1 байт) 0...2,
+                    «0» – не печатать
                 Номер строки названия операции в операции (1 байт) 1...2
                 Номер строки суммы в операции (1 байт) 1...2
                 Номер шрифта текстовой строки (1 байт)
@@ -1587,7 +1591,7 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x75(self):
         """ Формирование стандартной скидки/надбавки на
@@ -1607,7 +1611,7 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x76(self):
         """ Формирование закрытия чека на подкладном документе
@@ -1759,11 +1763,10 @@ class KKT(BaseKKT):
                 Порядковый номер оператора (1 байт) 1...30
                 Сдача (5 байт) 0000000000...9999999999
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
-## Implemented
     def x77(self, cash=0, payment2=0, payment3=0, payment4=0, discount=0,
-    text='',  taxes=[0,0,0,0]):
+            text='', taxes=[0, 0, 0, 0]):
         """ Формирование стандартного закрытия чека на подкладном
                 документе
             Команда: 77H. Длина сообщения: 72 байта.
@@ -1786,42 +1789,51 @@ class KKT(BaseKKT):
         """
         command = 0x77
 
-        cash     = money2integer(cash)
+        cash = money2integer(cash)
         payment2 = money2integer(payment2)
         payment3 = money2integer(payment3)
         payment4 = money2integer(payment4)
         discount = money2integer(discount)
 
         if cash < 0 or cash > 9999999999:
-            raise KktError("Наличные должны быть в диапазоне между 0 и 9999999999")
+            raise KktError(
+                "Наличные должны быть в диапазоне между 0 и 9999999999")
         if payment2 < 0 or payment2 > 9999999999:
-            raise KktError("Оплата 2 должна быть в диапазоне между 0 и 9999999999")
+            raise KktError(
+                "Оплата 2 должна быть в диапазоне между 0 и 9999999999")
         if payment3 < 0 or payment3 > 9999999999:
-            raise KktError("Оплата 3 должна быть в диапазоне между 0 и 0..9999999999")
+            raise KktError(
+                "Оплата 3 должна быть в диапазоне между 0 и 0..9999999999")
         if payment4 < 0 or payment4 > 9999999999:
-            raise KktError("Оплата 4 должна быть в диапазоне между 0 и 9999999999")
+            raise KktError(
+                "Оплата 4 должна быть в диапазоне между 0 и 9999999999")
         if discount < -9999 or discount > 9999:
-            raise KktError("Скидка должна быть в диапазоне между -9999 и 9999")
+            raise KktError(
+                "Скидка должна быть в диапазоне между -9999 и 9999")
         if len(text) > 40:
-            raise KktError("Текст должнен быть менее или равен 40 символам")
+            raise KktError(
+                "Текст должнен быть менее или равен 40 символам")
         if len(taxes) != 4:
-            raise KktError("Количество налогов должно равняться 4")
+            raise KktError(
+                "Количество налогов должно равняться 4")
         if not isinstance(taxes, (list, tuple)):
-            raise KktError("Перечень налогов должен быть типом list или tuple")
+            raise KktError(
+                "Перечень налогов должен быть типом list или tuple")
         for t in taxes:
             if t not in range(0, 5):
-               raise KktError("Налоги должны быть равны 0,1,2,3 или 4")
+                raise KktError(
+                    "Налоги должны быть равны 0,1,2,3 или 4")
 
-        cash       = int5.pack(cash)
-        payment2   = int5.pack(payment2)
-        payment3   = int5.pack(payment3)
-        payment4   = int5.pack(payment4)
-        discount   = int2.pack(discount)
-        taxes      = digits2string(taxes)
-        text       = text.encode(CODE_PAGE).ljust(40, chr(0x0))
+        cash = int5.pack(cash)
+        payment2 = int5.pack(payment2)
+        payment3 = int5.pack(payment3)
+        payment4 = int5.pack(payment4)
+        discount = int2.pack(discount)
+        taxes = digits2string(taxes)
+        text = text.encode(CODE_PAGE).ljust(40, chr(0x0))
 
-        params  = self.password + cash + payment2 + payment3 + payment4\
-                                + discount + taxes + text
+        params = (self.password + cash + payment2 + payment3 + payment4 +
+                  discount + taxes + text)
         data, error, command = self.ask(command, params, quick=True)
         operator = ord(data[0])
         odd = int5.unpack(data[1:6])
@@ -1838,12 +1850,12 @@ class KKT(BaseKKT):
                 Ширина подкладного документа в шагах (2 байта)*
                 Длина подкладного документа в шагах (2 байта)*
                 Ориентация печати – поворот в градусах по часовой
-                    стрелке (1 байт) «0» – 0o, «1» – 90o, «2» – 180o, 
+                    стрелке (1 байт) «0» – 0o, «1» – 90o, «2» – 180o,
                     «3» – 270o
                 Межстрочный интервал между 1-ой и 2-ой строками в шагах
                     (1 байт)*
                 Межстрочный интервал между 2-ой и 3-ей строками в шагах
-                    (1 байт)* 
+                    (1 байт)*
                 Аналогично для строк 3...199 в шагах (1 байт)*
                 Межстрочный интервал между 199-ой и 200-ой строками в
                     шагах (1 байт)*
@@ -1851,12 +1863,12 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
 
-            * - размер шага зависит от печатающего механизма 
-            конкретного фискального регистратора. Шаг по горизонтали 
-            не равен шагу по вертикали: эти параметры печатающего 
+            * - размер шага зависит от печатающего механизма
+            конкретного фискального регистратора. Шаг по горизонтали
+            не равен шагу по вертикали: эти параметры печатающего
             механизма указываются в инструкции по эксплуатации на ККТ.
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x79(self):
         """ Установка стандартной конфигурации подкладного
@@ -1867,7 +1879,7 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x7A(self):
         """ Заполнение буфера подкладного документа нефискальной
@@ -1876,14 +1888,14 @@ class KKT(BaseKKT):
                 Пароль оператора (4 байта)
                 Номер строки (1 байт) 1...200
                 Печатаемая информация (X байт) символ с кодом 27 и
-                    следующий за ним символ не помещаются в буфер 
-                    подкладного документа, а задают тип шрифта 
+                    следующий за ним символ не помещаются в буфер
+                    подкладного документа, а задают тип шрифта
                     следующих символов; не более 250 байт
             Ответ: 7AH. Длина сообщения: 3 байта.
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x7B(self):
         """ Очистка строки буфера подкладного документа от
@@ -1895,7 +1907,7 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x7C(self):
         """ Очистка всего буфера подк ладного документа от
@@ -1906,22 +1918,22 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x7D(self):
         """ Печать подкладного документа
             Команда: 7DH. Длина сообщения: 7 байт.
                 Пароль оператора (4 байта)
-                Очистка нефискальной информации (1 байт) «0» – есть, 
+                Очистка нефискальной информации (1 байт) «0» – есть,
                     «1» – нет
                 Тип печатаемой информации (1 байт) «0» – только
-                    нефискальная информация, «1» – только фискальная 
+                    нефискальная информация, «1» – только фискальная
                     информация, «2» – вся информация
             Ответ: 7DH. Длина сообщения: 3 байта.
             Код ошибки (1 байт)
             Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x7E(self):
         """ Общая конфигурация подкладного документа
@@ -1929,22 +1941,22 @@ class KKT(BaseKKT):
                 Пароль оператора (4 байта)
                 Ширина подкладного документа в шагах (2 байта)*
                 Длина подкладного документа в шагах (2 байта)*
-                Ориентация печати (1 байт) «0» – 0o; «1» – 90o; «2» – 
+                Ориентация печати (1 байт) «0» – 0o; «1» – 90o; «2» –
                     180o; «3» – 270o
                 Межстрочный интервал между строками в шагах (1 байт)*
             Ответ: 7EH. Длина сообщения: 3 байта.
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
 
-            * - размер шага зависит от печатающего механизма 
-            конкретного фискального регистратора. Шаг по горизонтали 
-            не равен шагу по вертикали: эти параметры печатающего 
+            * - размер шага зависит от печатающего механизма
+            конкретного фискального регистратора. Шаг по горизонтали
+            не равен шагу по вертикали: эти параметры печатающего
             механизма указываются в инструкции по эксплуатации на ККТ.
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
-## Implemented
-    def _x8count(self, command, count, price, text='', department=0, taxes=[0,0,0,0]):
+    def _x8count(self, command, count, price, text='', department=0,
+                 taxes=[0, 0, 0, 0]):
         """ Общий метод для продаж, покупок, возвратов и сторно
             Команда: 80H. Длина сообщения: 60 байт.
                 Пароль оператора (4 байта)
@@ -1966,11 +1978,14 @@ class KKT(BaseKKT):
         price = money2integer(price)
 
         if count < 0 or count > 9999999999:
-            raise KktError("Количество должно быть в диапазоне между 0 и 9999999999")
+            raise KktError(
+                "Количество должно быть в диапазоне между 0 и 9999999999")
         if price < 0 or price > 9999999999:
-            raise KktError("Цена должна быть в диапазоне между 0 и 9999999999")
-        if not department in range(17):
-            raise KktError("Номер отдела должен быть в диапазоне между 0 и 16")
+            raise KktError(
+                "Цена должна быть в диапазоне между 0 и 9999999999")
+        if department not in range(17):
+            raise KktError(
+                "Номер отдела должен быть в диапазоне между 0 и 16")
 
         if len(text) > 40:
             raise KktError("Текст должнен быть менее или равен 40 символам")
@@ -1980,21 +1995,20 @@ class KKT(BaseKKT):
             raise KktError("Перечень налогов должен быть типом list или tuple")
         for t in taxes:
             if t not in range(0, 5):
-               raise KktError("Налоги должны быть равны 0,1,2,3 или 4")
+                raise KktError("Налоги должны быть равны 0, 1, 2, 3 или 4")
 
-        count      = int5.pack(count)
-        price      = int5.pack(price)
+        count = int5.pack(count)
+        price = int5.pack(price)
         department = chr(department)
-        taxes      = digits2string(taxes)
-        text       = text.encode(CODE_PAGE).ljust(40, chr(0x0))
+        taxes = digits2string(taxes)
+        text = text.encode(CODE_PAGE).ljust(40, chr(0x0))
 
-        params  = self.password + count + price + department + taxes + text
+        params = self.password + count + price + department + taxes + text
         data, error, command = self.ask(command, params, quick=True)
         operator = ord(data[0])
         return operator
 
-## Implemented
-    def x80(self, count, price, text='', department=0, taxes=[0,0,0,0]):
+    def x80(self, count, price, text='', department=0, taxes=[0, 0, 0, 0]):
         """ Продажа
             Команда: 80H. Длина сообщения: 60 байт.
                 Пароль оператора (4 байта)
@@ -2011,11 +2025,11 @@ class KKT(BaseKKT):
                 Порядковый номер оператора (1 байт) 1...30
         """
         command = 0x80
-        return self._x8count(command=command, count=count, price=price,
-                        text=text, department=department, taxes=taxes)
+        return self._x8count(
+            command=command, count=count, price=price, text=text,
+            department=department, taxes=taxes)
 
-## Implemented
-    def x81(self, count, price, text='', department=0, taxes=[0,0,0,0]):
+    def x81(self, count, price, text='', department=0, taxes=[0, 0, 0, 0]):
         """ Покупка
             Команда: 81H. Длина сообщения: 60 байт.
                 Пароль оператора (4 байта)
@@ -2032,11 +2046,11 @@ class KKT(BaseKKT):
                 Порядковый номер оператора (1 байт) 1...30
         """
         command = 0x81
-        return self._x8count(command=command, count=count, price=price,
-                        text=text, department=department, taxes=taxes)
+        return self._x8count(
+            command=command, count=count, price=price, text=text,
+            department=department, taxes=taxes)
 
-## Implemented
-    def x82(self, count, price, text='', department=0, taxes=[0,0,0,0]):
+    def x82(self, count, price, text='', department=0, taxes=[0, 0, 0, 0]):
         """ Возврат продажи
             Команда: 82H. Длина сообщения: 60 байт.
                 Пароль оператора (4 байта)
@@ -2053,11 +2067,11 @@ class KKT(BaseKKT):
                 Порядковый номер оператора (1 байт) 1...30
         """
         command = 0x82
-        return self._x8count(command=command, count=count, price=price,
-                        text=text, department=department, taxes=taxes)
+        return self._x8count(
+            command=command, count=count, price=price, text=text,
+            department=department, taxes=taxes)
 
-## Implemented
-    def x83(self, count, price, text='', department=0, taxes=[0,0,0,0]):
+    def x83(self, count, price, text='', department=0, taxes=[0, 0, 0, 0]):
         """ Возврат покупки
             Команда: 83H. Длина сообщения: 60 байт.
                 Пароль оператора (4 байта)
@@ -2074,11 +2088,11 @@ class KKT(BaseKKT):
                 Порядковый номер оператора (1 байт) 1...30
         """
         command = 0x83
-        return self._x8count(command=command, count=count, price=price,
-                        text=text, department=department, taxes=taxes)
+        return self._x8count(
+            command=command, count=count, price=price, text=text,
+            department=department, taxes=taxes)
 
-## Implemented
-    def x84(self, count, price, text='', department=0, taxes=[0,0,0,0]):
+    def x84(self, count, price, text='', department=0, taxes=[0, 0, 0, 0]):
         """ Сторно
             Команда: 84H. Длина сообщения: 60 байт.
                 Пароль оператора (4 байта)
@@ -2095,11 +2109,12 @@ class KKT(BaseKKT):
                 Порядковый номер оператора (1 байт) 1...30
         """
         command = 0x84
-        return self._x8count(command=command, count=count, price=price,
-                        text=text, department=department, taxes=taxes)
+        return self._x8count(
+            command=command, count=count, price=price, text=text,
+            department=department, taxes=taxes)
 
-## Implemented
-    def x85(self, cash=0, summs=[0,0,0,0], discount=0, taxes=[0,0,0,0], text=''):
+    def x85(self, cash=0, summs=[0, 0, 0, 0], discount=0, taxes=[0, 0, 0, 0],
+            text=''):
         """ Закрытие чека
             Команда: 85H. Длина сообщения: 71 байт.
                 Пароль оператора (4 байта)
@@ -2126,10 +2141,12 @@ class KKT(BaseKKT):
         summa3 = money2integer(summs[2])
         summa4 = money2integer(summs[3])
         discount = money2integer(discount)
-        
-        for i,s in enumerate([summa1, summa2, summa3, summa4]):
+
+        for i, s in enumerate([summa1, summa2, summa3, summa4]):
             if s < 0 or s > 9999999999:
-                raise KktError("Переменная `summa%d` должна быть в диапазоне между 0 и 9999999999" % i+1)
+                raise KktError(
+                    "Переменная `summa%d` должна быть в диапазоне между "
+                    "0 и 9999999999" % i + 1)
         if discount < -9999 or discount > 9999:
             raise KktError("Скидка должна быть в диапазоне между -9999 и 9999")
 
@@ -2141,18 +2158,18 @@ class KKT(BaseKKT):
             raise KktError("Перечень налогов должен быть типом list или tuple")
         for t in taxes:
             if t not in range(0, 5):
-               raise KktError("Налоги должны быть равны 0,1,2,3 или 4")
+                raise KktError("Налоги должны быть равны 0, 1, 2, 3 или 4")
 
         summa1 = int5.pack(summa1)
         summa2 = int5.pack(summa2)
         summa3 = int5.pack(summa3)
         summa4 = int5.pack(summa4)
         discount = int2.pack(discount)
-        taxes    = digits2string(taxes)
-        text     = text.encode(CODE_PAGE).ljust(40, chr(0x0))
+        taxes = digits2string(taxes)
+        text = text.encode(CODE_PAGE).ljust(40, chr(0x0))
 
-        params  = self.password + summa1 + summa2 + summa3 + summa4 \
-                                + discount + taxes + text
+        params = (self.password + summa1 + summa2 + summa3 + summa4 +
+                  discount + taxes + text)
         data, error, command = self.ask(command, params)
         operator = ord(data[0])
         odd = int5.unpack(data[1:6])
@@ -2162,9 +2179,8 @@ class KKT(BaseKKT):
         }
         return result
 
-## Implemented
-    def _x8summa(self, command, summa, text='', taxes=[0,0,0,0]):
-        """ Общий метод для скидок, 
+    def _x8summa(self, command, summa, text='', taxes=[0, 0, 0, 0]):
+        """ Общий метод для скидок,
             Команда: 86H. Длина сообщения: 54 байт.
                 Пароль оператора (4 байта)
                 Сумма (5 байт) 0000000000...9999999999
@@ -2182,7 +2198,8 @@ class KKT(BaseKKT):
         summa = money2integer(summa)
 
         if summa < 0 or summa > 9999999999:
-            raise KktError("Сумма должна быть в диапазоне между 0 и 9999999999")
+            raise KktError(
+                "Сумма должна быть в диапазоне между 0 и 9999999999")
         if len(text) > 40:
             raise KktError("Текст должнен быть менее или равен 40 символам")
         if len(taxes) != 4:
@@ -2191,19 +2208,18 @@ class KKT(BaseKKT):
             raise KktError("Перечень налогов должен быть типом list или tuple")
         for t in taxes:
             if t not in range(0, 5):
-               raise KktError("Налоги должны быть равны 0,1,2,3 или 4")
+                raise KktError("Налоги должны быть равны 0, 1, 2, 3 или 4")
 
-        summa      = int5.pack(summa)
-        taxes      = digits2string(taxes)
-        text       = text.encode(CODE_PAGE).ljust(40, chr(0x0))
+        summa = int5.pack(summa)
+        taxes = digits2string(taxes)
+        text = text.encode(CODE_PAGE).ljust(40, chr(0x0))
 
-        params  = self.password + summa + taxes + text
+        params = self.password + summa + taxes + text
         data, error, command = self.ask(command, params, quick=True)
         operator = ord(data[0])
         return operator
 
-## Implemented
-    def x86(self, summa, text='', taxes=[0,0,0,0]):
+    def x86(self, summa, text='', taxes=[0, 0, 0, 0]):
         """ Скидка
             Команда: 86H. Длина сообщения: 54 байт.
                 Пароль оператора (4 байта)
@@ -2218,11 +2234,10 @@ class KKT(BaseKKT):
                 Порядковый номер оператора (1 байт) 1...30
         """
         command = 0x86
-        return self._x8summa(command=command, summa=summa,
-                        text=text, taxes=taxes)
+        return self._x8summa(command=command, summa=summa, text=text,
+                             taxes=taxes)
 
-## Implemented
-    def x87(self, summa, text='', taxes=[0,0,0,0]):
+    def x87(self, summa, text='', taxes=[0, 0, 0, 0]):
         """ Надбавка
             Команда: 87H. Длина сообщения: 54 байт.
                 Пароль оператора (4 байта)
@@ -2237,10 +2252,9 @@ class KKT(BaseKKT):
                 Порядковый номер оператора (1 байт) 1...30
         """
         command = 0x87
-        return self._x8summa(command=command, summa=summa,
-                        text=text, taxes=taxes)
+        return self._x8summa(command=command, summa=summa, text=text,
+                             taxes=taxes)
 
-## Implemented
     def x88(self):
         """ Аннулирование чека
             Команда: 88H. Длина сообщения: 5 байт.
@@ -2255,7 +2269,6 @@ class KKT(BaseKKT):
         operator = ord(data[0])
         return operator
 
-## Implemented
     def x89(self):
         """ Подытог чека
             Команда: 89H. Длина сообщения: 5 байт.
@@ -2270,8 +2283,7 @@ class KKT(BaseKKT):
         operator = ord(data[0])
         return operator
 
-## Implemented
-    def x8A(self, summa, text='', taxes=[0,0,0,0]):
+    def x8A(self, summa, text='', taxes=[0, 0, 0, 0]):
         """ Сторно скидки
             Команда: 8AH. Длина сообщения: 54 байта.
                 Пароль оператора (4 байта)
@@ -2286,11 +2298,10 @@ class KKT(BaseKKT):
                 Порядковый номер оператора (1 байт) 1...30
         """
         command = 0x8A
-        return self._x8summa(command=command, summa=summa,
-                        text=text, taxes=taxes)
+        return self._x8summa(command=command, summa=summa, text=text,
+                             taxes=taxes)
 
-## Implemented
-    def x8B(self, summa, text='', taxes=[0,0,0,0]):
+    def x8B(self, summa, text='', taxes=[0, 0, 0, 0]):
         """ Сторно надбавки
             Команда: 8BH. Длина сообщения: 54 байта.
                 Пароль оператора (4 байта)
@@ -2306,9 +2317,8 @@ class KKT(BaseKKT):
         """
         command = 0x8B
         return self._x8summa(command=command, summa=summa,
-                        text=text, taxes=taxes)
+                             text=text, taxes=taxes)
 
-## Implemented
     def x8C(self):
         """ Повтор документа
             Команда: 8CH. Длина сообщения: 5 байт.
@@ -2318,8 +2328,8 @@ class KKT(BaseKKT):
                 Порядковый номер оператора (1 байт) 1...30
 
             Примечание:
-                Команда выводит на печать копию последнего закрытого 
-                документа продажи, покупки, возврата продажи и 
+                Команда выводит на печать копию последнего закрытого
+                документа продажи, покупки, возврата продажи и
                 возврата покупки.
         """
         command = 0x8C
@@ -2327,7 +2337,6 @@ class KKT(BaseKKT):
         operator = ord(data[0])
         return operator
 
-## Implemented
     def x8D(self, document_type):
         """ Открыть чек
             Команда: 8DH. Длина сообщения: 6 байт.
@@ -2343,10 +2352,10 @@ class KKT(BaseKKT):
         """
         command = 0x8D
 
-        if not document_type in range(4):
-            raise KktError("Тип документа должен быть значением 0,1,2 или 3")
+        if document_type not in range(4):
+            raise KktError("Тип документа должен быть значением 0, 1, 2 или 3")
 
-        params  = self.password + chr(document_type)
+        params = self.password + chr(document_type)
         data, error, command = self.ask(command, params)
         operator = ord(data[0])
         return operator
@@ -2372,7 +2381,7 @@ class KKT(BaseKKT):
                 Доза в миллилитрах (4 байта) 00000000...99999999
                 Доза в денежных единицах (5 байт) 0000000000...9999999999
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x91(self):
         """ Формирование чека отпуска нефтепродуктов в режиме
@@ -2394,7 +2403,7 @@ class KKT(BaseKKT):
                 Доза в миллилитрах (4 байта) 00000000...99999999
                 Доза в денежных единицах (5 байт) 0000000000...9999999999
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x92(self):
         """ Формирование чека коррекции при неполном отпуске
@@ -2415,7 +2424,7 @@ class KKT(BaseKKT):
                 Недолитая доза в миллилитрах (4 байта) 00000000...99999999
                 Возвращаемая сумма (5 байт) 0000000000...9999999999
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x93(self):
         """ Задание дозы РК в миллилитрах
@@ -2423,15 +2432,16 @@ class KKT(BaseKKT):
                 Пароль оператора (4 байта)
                 Номер ТРК (1 байт) 1...31
                 Номер РК в ТРК (1 байт) 1...8
-                Доза в миллилитрах (4 байта), если доза FFh FFh FFh FFh, то производится
-                заправка до полного бака: 00000000...99999999
+                Доза в миллилитрах (4 байта), если доза FFh FFh FFh FFh,
+                то производится заправка до полного бака:
+                    00000000...99999999
             Ответ: 93H. Длина сообщения: 12 байт.
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
                 Доза в миллилитрах (4 байта) 00000000...99999999
                 Доза в денежных единицах (5 байт) 0000000000...9999999999
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x94(self):
         """ Задание дозы РК в денежных единицах
@@ -2446,7 +2456,7 @@ class KKT(BaseKKT):
                 Доза в миллилитрах (4 байта) 00000000...99999999
                 Доза в денежных единицах (5 байт) 0000000000...9999999999
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x95(self):
         """ Продажа нефтепродуктов
@@ -2464,7 +2474,7 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x96(self):
         """ Останов РК
@@ -2476,7 +2486,7 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x97(self):
         """ Пуск РК
@@ -2488,7 +2498,7 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x98(self):
         """ Сброс РК
@@ -2500,7 +2510,7 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x99(self):
         """ Сброс всех ТРК
@@ -2510,7 +2520,7 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x9A(self):
         """ Задание параметров РК
@@ -2524,7 +2534,7 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x9B(self):
         """ Считать литровый суммарный счетчик
@@ -2537,7 +2547,7 @@ class KKT(BaseKKT):
                 Порядковый номер оператора (1 байт) 1...30
                 Суммарный счетчик в миллилитрах (4 байта) 00000000...99999999
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x9E(self):
         """ Запрос текущей дозы РК
@@ -2550,7 +2560,7 @@ class KKT(BaseKKT):
                 Порядковый номер оператора (1 байт) 1...30
                 Текущая доза в миллилитрах (4 байта) 00000000...99999999
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def x9F(self):
         """ Запрос состояния РК
@@ -2563,8 +2573,10 @@ class KKT(BaseKKT):
                 Порядковый номер оператора (1 байт) 1...30
                 Текущая доза в миллилитрах (4 байта) 00000000...99999999
                 Заданная доза в миллилитрах (4 байта) 00000000...99999999
-                Текущая доза в денежных единицах (5 байт) 0000000000...9999999999
-                Заданная доза в денежных единицах (5 байт) 0000000000...9999999999
+                Текущая доза в денежных единицах (5 байт)
+                    0000000000...9999999999
+                Заданная доза в денежных единицах (5 байт)
+                    0000000000...9999999999
                 Замедление в миллилитрах (3 байта) 000000...999999
                 Цена (3 байта) 000000...999999
                 Статус РК (1 байт):
@@ -2573,12 +2585,14 @@ class KKT(BaseKKT):
                     02 готовность, доза задана
                     03 пуск, ожидание снятия пистолета
                     04 пуск, ожидание возврата пистолета
-                    05 пуск, ожидание снятия пистолета, после возврата пистолета
+                    05 пуск, ожидание снятия пистолета,
+                       после возврата пистолета
                     06 пуск, тест индикатора
                     07 заправка на полной производительности
                     08 заправка с замедлением
                     09 остановка по исчерпанию дозы
-                    0A остановка при отсутствии импульсов с датчика (по тайм-ауту)
+                    0A остановка при отсутствии импульсов с датчика
+                       (по тайм-ауту)
                     0B остановка по команде оператора
                     0С остановка по возврату пистолета
                     0D остановка по ошибке
@@ -2602,7 +2616,7 @@ class KKT(BaseKKT):
                     09 – обрыв фаз датчика объѐма COS
                     FF – неисправность оборудования
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def xA0(self):
         """ Отчет ЭКЛЗ по отделам в заданном диапазоне дат
@@ -2617,7 +2631,7 @@ class KKT(BaseKKT):
 
             Примечание: Время выполнения команды – до 150 секунд.
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def xA1(self):
         """ Отчет ЭКЛЗ по отделам в заданном диапазоне номеров
@@ -2633,7 +2647,7 @@ class KKT(BaseKKT):
 
             Примечание: Время выполнения команды – до 150 секунд.
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def xA2(self):
         """ Отчет ЭКЛЗ по закрытиям смен в заданном диапазоне дат
@@ -2647,7 +2661,7 @@ class KKT(BaseKKT):
 
             Примечание: Время выполнения команды – до 100 секунд.
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def xA3(self):
         """ Отчет ЭКЛЗ по закрытиям смен в заданном диапазоне
@@ -2662,9 +2676,8 @@ class KKT(BaseKKT):
 
             Примечание: Время выполнения команды – до 100 секунд.
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
-## Implemented
     def xA4(self, number):
         """ Итоги смены по номеру смены ЭКЛЗ
             Команда: A4H. Длина сообщения: 7 байт.
@@ -2676,7 +2689,7 @@ class KKT(BaseKKT):
             Примечание: Время выполнения команды – до 40 секунд.
         """
         command = 0xBA
-        params  = self.admin_password + int2.pack(int(number))
+        params = self.admin_password + int2.pack(int(number))
         data, error, command = self.ask(command, params)
         return True
 
@@ -2690,7 +2703,7 @@ class KKT(BaseKKT):
 
             Примечание: Время выполнения команды – до 40 секунд.
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def xA6(self):
         """ Контрольная лента из ЭКЛЗ по номеру смены
@@ -2702,9 +2715,8 @@ class KKT(BaseKKT):
 
             Примечание: Время выполнения команды – до 40 секунд.
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
-## Implemented
     def xA7(self):
         """ Прерывание полного отчета ЭКЛЗ или контрольной ленты
                 ЭКЛЗ или печати платежного документа ЭКЛЗ
@@ -2714,7 +2726,7 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
         """
         command = 0xA7
-        params  = self.admin_password
+        params = self.admin_password
         data, error, command = self.ask(command, params)
         return error
 
@@ -2725,11 +2737,11 @@ class KKT(BaseKKT):
             Ответ: A8H. Длина сообщения: 2 байта.
                 Код ошибки (1 байт)
         """
-        raise NotImplemented
-        #~ command = 0xA8
-        #~ params  = self.admin_password
-        #~ data, error, command = self.ask(command, params)
-        #~ return error
+        raise NotImplementedError()
+        # command = 0xA8
+        # params = self.admin_password
+        # data, error, command = self.ask(command, params)
+        # return error
 
     def xA9(self):
         """ Активизация ЭКЛЗ
@@ -2738,11 +2750,11 @@ class KKT(BaseKKT):
             Ответ: A9H. Длина сообщения: 2 байта.
                 Код ошибки (1 байт)
         """
-        raise NotImplemented
-        #~ command = 0xA9
-        #~ params  = self.admin_password
-        #~ data, error, command = self.ask(command, params)
-        #~ return error
+        raise NotImplementedError()
+        # command = 0xA9
+        # params = self.admin_password
+        # data, error, command = self.ask(command, params)
+        # return error
 
     def xAA(self):
         """ Закрытие архива ЭКЛЗ
@@ -2751,13 +2763,12 @@ class KKT(BaseKKT):
             Ответ: AAH. Длина сообщения: 2 байта.
                 Код ошибки (1 байт)
         """
-        raise NotImplemented
-        #~ command = 0xAA
-        #~ params  = self.admin_password
-        #~ data, error, command = self.ask(command, params)
-        #~ return error
+        raise NotImplementedError()
+        # command = 0xAA
+        # params = self.admin_password
+        # data, error, command = self.ask(command, params)
+        # return error
 
-## Implemented
     def xAB(self):
         """ Запрос регистрационного номера ЭКЛЗ
             Команда: ABH. Длина сообщения: 5 байт.
@@ -2767,7 +2778,7 @@ class KKT(BaseKKT):
                 Номер ЭКЛЗ (5 байт) 0000000000...9999999999
         """
         command = 0xAB
-        params  = self.admin_password
+        params = self.admin_password
         data, error, command = self.ask(command, params)
         return int5.unpack(data[:5])
 
@@ -2778,7 +2789,7 @@ class KKT(BaseKKT):
             Ответ: ACH. Длина сообщения: 2 байта.
                 Код ошибки (1 байт)
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def xAD(self):
         """ Запрос состояния по коду 1 ЭКЛЗ
@@ -2794,13 +2805,13 @@ class KKT(BaseKKT):
                 Флаги ЭКЛЗ (см. описание ЭКЛЗ) (1 байт)
 
             Примечание:
-                Флаги, используемые ЭКЛЗ, описаны в документе 
-                «Драйвер ККТ: руководство программиста» версии А4.3 и 
+                Флаги, используемые ЭКЛЗ, описаны в документе
+                «Драйвер ККТ: руководство программиста» версии А4.3 и
                 выше.
         """
-        raise NotImplemented
+        raise NotImplementedError()
         command = 0xAD
-        params  = self.admin_password
+        params = self.admin_password
         data, error, command = self.ask(command, params)
 
     def xAE(self):
@@ -2815,12 +2826,11 @@ class KKT(BaseKKT):
                 Итог возвратов продаж (6 байт) 000000000000...999999999999
                 Итог возвратов покупок (6 байт) 000000000000...999999999999
         """
-        raise NotImplemented
+        raise NotImplementedError()
         command = 0xAE
-        params  = self.admin_password
+        params = self.admin_password
         data, error, command = self.ask(command, params)
 
-## Implemented
     def xAF(self):
         """ Тест целостности архива ЭКЛЗ
             Команда: AFH. Длина сообщения: 5 байт.
@@ -2829,11 +2839,10 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
         """
         command = 0xAF
-        params  = self.admin_password
+        params = self.admin_password
         data, error, command = self.ask(command, params)
         return error
 
-## Implemented
     def xB0(self, admin_password=None):
         """ Продолжение печати
             Команда: B0H. Длина сообщения: 5 байт.
@@ -2844,12 +2853,11 @@ class KKT(BaseKKT):
                 Порядковый номер оператора (1 байт) 1...30
         """
         command = 0xB0
-        params  = self.admin_password
+        params = self.admin_password
         data, error, command = self.ask(command, params)
         operator = ord(data[0])
         return operator
 
-## Implemented
     def xB1(self):
         """ Запрос версии ЭКЛЗ
             Команда: B1H. Длина сообщения: 5 байт.
@@ -2859,12 +2867,11 @@ class KKT(BaseKKT):
                 Строка символов в кодировке WIN1251 (18 байт)
         """
         command = 0xB1
-        params  = self.admin_password
+        params = self.admin_password
         data, error, command = self.ask(command, params)
         version = data[:18].decode(CODE_PAGE)
         return version
 
-## Implemented
     def xB2(self):
         """ Инициализация архива ЭКЛЗ
             Команда: B2H. Длина сообщения: 5 байт.
@@ -2873,15 +2880,14 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
 
             Примечание:
-                Команда работает только с отладочным комплектом ЭКЛЗ. 
+                Команда работает только с отладочным комплектом ЭКЛЗ.
                 Время выполнения команды – до 20 секунд.
         """
         command = 0xB2
-        params  = self.admin_password
+        params = self.admin_password
         data, error, command = self.ask(command, params)
         return error
 
-## Implemented
     def xB3(self):
         """ Запрос данных отчѐта ЭКЛЗ
             Команда: B3H. Длина сообщения: 5 байт.
@@ -2891,7 +2897,7 @@ class KKT(BaseKKT):
                 Строка или фрагмент отчета (см. спецификацию ЭКЛЗ) (X байт)
         """
         command = 0xE1
-        params  = self.admin_password
+        params = self.admin_password
         data, error, command = self.ask(command, params)
         return data.decode(CODE_PAGE)
 
@@ -2904,7 +2910,7 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Тип ККМ – строка символов в кодировке WIN1251 (16 байт)
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def xB5(self):
         """ Запрос документа ЭКЛЗ
@@ -2917,7 +2923,7 @@ class KKT(BaseKKT):
 
             Примечание: Время выполнения команды – до 40 секунд.
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def xB6(self):
         """ Запрос отчѐта ЭКЛЗ по отделам в заданном диапазоне дат
@@ -2934,7 +2940,7 @@ class KKT(BaseKKT):
             Примечание: Время выполнения команды – до 150 секунд.
 
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def xB7(self):
         """ Запрос отчѐта ЭКЛЗ по отделам в заданном диапазоне
@@ -2952,7 +2958,7 @@ class KKT(BaseKKT):
             Примечание: Время выполнения команды – до 150 секунд.
 
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def xB8(self):
         """ Запрос отчѐта ЭКЛЗ по закрытиям смен в заданном
@@ -2969,7 +2975,7 @@ class KKT(BaseKKT):
             Примечание: Время выполнения команды – до 100 секунд.
 
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def xB9(self):
         """ Запрос отчѐта ЭКЛЗ по закрытиям смен в заданном диапазоне
@@ -2985,9 +2991,8 @@ class KKT(BaseKKT):
 
             Примечание: Время выполнения команды – до 100 секунд.
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
-## Implemented
     def xBA(self, number):
         """ Запрос в ЭКЛЗ итогов смены по номеру смены
             Команда: BAH. Длина сообщения: 7 байт.
@@ -3000,7 +3005,7 @@ class KKT(BaseKKT):
             Примечание: Время выполнения команды – до 40 секунд.
         """
         command = 0xBA
-        params  = self.admin_password + int2.pack(int(number))
+        params = self.admin_password + int2.pack(int(number))
         data, error, command = self.ask(command, params)
         kkm = data.decode(CODE_PAGE)
         return kkm
@@ -3013,7 +3018,7 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Тип ККМ – строка символов в кодировке WIN1251 (16 байт)
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def xBC(self):
         """ Вернуть ошибку ЭКЛЗ
@@ -3026,7 +3031,7 @@ class KKT(BaseKKT):
             Примечание:
                 Команда работает только с отладочным комплектом ЭКЛЗ.
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def xC0(self):
         """ Загрузка графики
@@ -3038,7 +3043,7 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def xC1(self):
         """ Печать графики
@@ -3050,9 +3055,9 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
-    def xC2(self,barcode):
+    def xC2(self, barcode):
         """ Печать штрих-кода
             Команда: C2H. Длина сообщения: 10 байт.
                 Пароль оператора (4 байта)
@@ -3064,7 +3069,7 @@ class KKT(BaseKKT):
         command = 0xC2
         barcode = int5.pack(barcode)
 
-        params  = self.password + barcode
+        params = self.password + barcode
         data, error, command = self.ask(command, params)
         operator = ord(data[0])
         return operator
@@ -3079,7 +3084,7 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def xC4(self):
         """ Загрузка расширенной графики
@@ -3091,7 +3096,7 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def xC5(self):
         """ Печать линии
@@ -3103,7 +3108,7 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def xC6(self):
         """ Суточный отчет с гашением в буфер
@@ -3113,7 +3118,7 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def xC7(self):
         """ Распечатать отчет из буфера
@@ -3123,7 +3128,7 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def xC8(self):
         """ Запрос количества строк в буфере печати
@@ -3134,7 +3139,7 @@ class KKT(BaseKKT):
                 Количество строк в буфере печати(2 байта)
                 Количество напечатанных строк (2 байта)
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def xC9(self):
         """ Получить строку буфера печати
@@ -3145,9 +3150,8 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Данные строки (n байт)
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
-## Implemented
     def xCA(self):
         """ Очистить буфер печати
             Команда: CAH. Длина сообщения: 5 байт.
@@ -3189,7 +3193,7 @@ class KKT(BaseKKT):
                         4 – Смена открыта 24 часа закончились (0 – нет,
                             1 – есть)
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def xD1(self):
         """ Запрос состояния ФР IBM короткий
@@ -3203,7 +3207,7 @@ class KKT(BaseKKT):
                     Битовое поле (назначение бит):
                         0 – Буфер печати ККТ пуст (0 –нет, 1 – есть)
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def xDD(self):
         """ Загрузка данных
@@ -3216,7 +3220,7 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def xDE(self):
         """ Печать многомерного штрих -кода
@@ -3237,9 +3241,8 @@ class KKT(BaseKKT):
 
             Примечание: тип штрих-кода смотрите в документации
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
-## Implemented
     def xE0(self):
         """ Открыть смену
             Команда: E0H. Длина сообщения: 5байт.
@@ -3248,7 +3251,7 @@ class KKT(BaseKKT):
                 Порядковый номер оператора (1 байт) 1...30
 
             Примечание:
-                Команда открывает смену в ФП и переводит ККТ в режим 
+                Команда открывает смену в ФП и переводит ККТ в режим
                 «Открытой смены».
         """
         command = 0xE0
@@ -3256,7 +3259,6 @@ class KKT(BaseKKT):
         operator = ord(data[0])
         return operator
 
-## Implemented
     def xE1(self):
         """ Допечатать ПД
             Команда: E1H. Длина сообщения: 5байт.
@@ -3265,10 +3267,10 @@ class KKT(BaseKKT):
                 Порядковый номер оператора (1 байт) 1...30
 
             Примечание:
-                Команда допечатывает ПД после нештатных ситуаций 
-                (обрыв бумаги, отключение питания и т.д.). Печать 
-                возобновляется с той же строки, на которой произошел 
-                останов печати в случае отключения питания или обрыва 
+                Команда допечатывает ПД после нештатных ситуаций
+                (обрыв бумаги, отключение питания и т.д.). Печать
+                возобновляется с той же строки, на которой произошел
+                останов печати в случае отключения питания или обрыва
                 бумаги.
 
         """
@@ -3277,7 +3279,6 @@ class KKT(BaseKKT):
         operator = ord(data[0])
         return operator
 
-## Implemented
     def xE2(self):
         """ Открыть нефискальный документ
             Команда: E2H. Длина сообщения: 5байт.
@@ -3295,7 +3296,6 @@ class KKT(BaseKKT):
         operator = ord(data[0])
         return operator
 
-## Implemented
     def xE3(self):
         """ Закрыть нефискальный документ
             Команда: E3H. Длина сообщения: 5байт.
@@ -3324,13 +3324,13 @@ class KKT(BaseKKT):
                 Порядковый номер оператора (1 байт) 1...30
 
             Примечание:
-                Команда печатает реквизит в открытом фискальном 
-                документе. Поле «значение реквизита» содержит 
-                текстовую информацию в кодировке win1251 с 
-                разделителем строк 0х0А. Может быть напечатано не 
+                Команда печатает реквизит в открытом фискальном
+                документе. Поле «значение реквизита» содержит
+                текстовую информацию в кодировке win1251 с
+                разделителем строк 0х0А. Может быть напечатано не
                 более 4-х строк.
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def xE5(self):
         """ Запрос состояния купюроприемника
@@ -3346,14 +3346,14 @@ class KKT(BaseKKT):
                     на последнюю команду
                 Poll (подробности в описании протокола CCNet)
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def xE6(self):
         """ Запрос регистров купюроприемника
             Команда: E6H. Длина сообщения: 6 байт.
                 Пароль оператора (4 байта)
                 Номер набора регистров (1 байт) 0 – количество купюр в
-                    текущем чеке, 1 – количество купюр в текущей 
+                    текущем чеке, 1 – количество купюр в текущей
                     смене, 2 – Общее количество принятых купюр.
             Ответ: E6H. Длина сообщения: 100 байт.
                 Код ошибки(1 байт)
@@ -3362,9 +3362,8 @@ class KKT(BaseKKT):
                 Количество купюр типа 0.23(4*24=96 байт) 24 4-х байтный
                     целых числа.
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
-## Implemented
     def xE7(self):
         """ Отчет по купюроприемнику
             Команда: E7H. Длина сообщения: 5 байт.
@@ -3379,7 +3378,6 @@ class KKT(BaseKKT):
         operator = ord(data[0])
         return operator
 
-## Implemented
     def xE8(self, tax_password):
         """ Оперативный отчет НИ
             Команда: E8H. Длина сообщения: 5 байт.
@@ -3401,7 +3399,7 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def xF1(self):
         """ Выдать чек
@@ -3415,7 +3413,7 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
     def xF3(self):
         """ Установить пароль ЦТО
@@ -3425,9 +3423,8 @@ class KKT(BaseKKT):
             Ответ: F3H. Длина сообщения: 2 байта.
                 Код ошибки (1 байт)
         """
-        raise NotImplemented
+        raise NotImplementedError()
 
-## Implemented
     def xFC(self):
         """ Получить тип устройства
             Команда: FCH. Длина сообщения: 1 байт.
@@ -3442,9 +3439,9 @@ class KKT(BaseKKT):
                 Язык устройства (1 байт) 0...255 русский – 0;
                     английский – 1;
                 Название устройства – строка символов в кодировке
-                    WIN1251. Количество байт, отводимое под название 
-                    устройства, определяется в каждом конкретном 
-                    случае самостоятельно разработчиками устройства 
+                    WIN1251. Количество байт, отводимое под название
+                    устройства, определяется в каждом конкретном
+                    случае самостоятельно разработчиками устройства
                     (X байт)
 
             Примечание:
@@ -3454,12 +3451,12 @@ class KKT(BaseKKT):
 
         data, error, command = self.ask(command, without_password=True)
         result = {
-            'device_type':         ord(data[0]),
-            'device_subtype':      ord(data[1]),
-            'protocol_version':    ord(data[2]),
+            'device_type': ord(data[0]),
+            'device_subtype': ord(data[1]),
+            'protocol_version': ord(data[2]),
             'protocol_subversion': ord(data[3]),
-            'device_model':        ord(data[4]),
-            'device_language':     ord(data[5]),
+            'device_model': ord(data[4]),
+            'device_language': sord(data[5]),
             'device_name': data[6:].decode(CODE_PAGE),
         }
         return result
@@ -3476,13 +3473,8 @@ class KKT(BaseKKT):
                 Порядковый номер оператора (1 байт) 1...30
 
             Примечание:
-                Дополнительное внешнее устройство – устройство, для 
-                функционирования которого не требуется формирования 
+                Дополнительное внешнее устройство – устройство, для
+                функционирования которого не требуется формирования
                 ответного сообщения.
         """
-        raise NotImplemented
-
-
-
-
-
+        raise NotImplementedError()

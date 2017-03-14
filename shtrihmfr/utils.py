@@ -1,33 +1,34 @@
 # -*- coding: utf-8 -*-
 #
 #  Copyright 2013 Grigoriy Kramarenko <root@rosix.ru>
-#  
+#
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
 #  the Free Software Foundation; either version 3 of the License, or
 #  (at your option) any later version.
-#  
+#
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-#  
+#
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
-#  
-#  
-
+#
+#
 from __future__ import unicode_literals
 import struct
 import sys
 
 
-__all__ = ('PY2', 'int2', 'int4', 'int5', 'int6', 'int7', 'int8',
+__all__ = (
+    'PY2', 'int2', 'int4', 'int5', 'int6', 'int7', 'int8',
     'money2integer', 'integer2money', 'count2integer',
-    'get_control_summ','string2bits', 'bits2string',
-    'digits2string', 'password_prapare')
+    'get_control_summ', 'string2bits', 'bits2string',
+    'digits2string', 'password_prapare'
+)
 
 
 PY2 = sys.version_info[0] == 2
@@ -35,6 +36,7 @@ PY2 = sys.version_info[0] == 2
 
 class Struct(struct.Struct):
     """ Преобразователь """
+
     def __init__(self, *args, **kwargs):
         self.length = kwargs.pop('length', None)
         super(Struct, self).__init__(*args, **kwargs)
@@ -50,7 +52,7 @@ class Struct(struct.Struct):
     def pre_value(self, value):
         """ Обрезает или добавляет нулевые байты """
         if self.size:
-            if self.format in (b'h',b'i',b'I',b'l',b'L',b'q',b'Q'):
+            if self.format in (b'h', b'i', b'I', b'l', b'L', b'q', b'Q'):
                 _len = len(value)
                 if _len < self.size:
                     value = value.ljust(self.size, chr(0x0))
@@ -61,7 +63,7 @@ class Struct(struct.Struct):
     def post_value(self, value):
         """ Обрезает или добавляет нулевые байты """
         if self.length:
-            if self.format in (b'h',b'i',b'I',b'l',b'L',b'q',b'Q'):
+            if self.format in (b'h', b'i', b'I', b'l', b'L', b'q', b'Q'):
                 _len = len(value)
                 if _len < self.length:
                     value = value.ljust(self.length, chr(0x0))
@@ -146,11 +148,11 @@ def digits2string(digits):
     """
     Преобразует список из целых или шестнадцатеричных значений в строку
     """
-    return ''.join([ chr(x) for x in digits ]).encode('utf-8')
+    return ''.join([chr(x) for x in digits]).encode('utf-8')
 
 
 def password_prapare(password):
-    
+
     if isinstance(password, (list, tuple)):
         try:
             return digits2string(password[:4])
@@ -169,8 +171,3 @@ def password_prapare(password):
         raise ValueError(msg)
 
     return int4.pack(password)
-
-
-
-
-
