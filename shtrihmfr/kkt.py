@@ -298,7 +298,6 @@ class BaseKKT(object):
             msg = ("Контрольная сумма %i должна быть равна %i " %
                    (ord(control_summ), ord(control_read)))
             raise KktError(msg)
-
         self._write(ACK)
         self._flush()
         # time.sleep(MIN_TIMEOUT*2)
@@ -310,25 +309,18 @@ class BaseKKT(object):
 
     def send(self, command, params, quick=False):
         """ Стандартная обработка команды """
-
         # self.clear()
-
         if not quick:
             self._flush()
-        if isinstance(command, int):
-            data = chr(command)
-        else:
-            data = command
+        data = command
         length = 1
         if params is not None:
             data += params
             length += len(params)
         content = chr(length) + data
         control_summ = get_control_summ(content)
-
         self._write(STX + content + control_summ)
         self._flush()
-
         return True
 
     def ask(self, command, params=None, sleep=0, pre_clear=True,
@@ -338,18 +330,16 @@ class BaseKKT(object):
 
             Возвращает позиционные параметры: (data, error, command)
         """
-
-        # raise KktError('Тест ошибки')
-
         if quick:
             # pre_clear = False
             disconnect = False
             sleep = 0
-
         if params is None and not without_password:
             params = self.password
         # if pre_clear:
             # self.clear()
+        if isinstance(command, int):
+            command = chr(command)
         self.send(command, params, quick=quick)
         if sleep:
             time.sleep(sleep)
@@ -359,7 +349,6 @@ class BaseKKT(object):
             self.disconnect()
         if error:
             raise KktError(error)
-
         return answer, error, command
 
 
@@ -621,8 +610,9 @@ class KKT(BaseKKT):
         """ Печать жирной строки
             Команда: 12H. Длина сообщения: 26 байт.
                 Пароль оператора (4 байта)
-                Флаги (1 байт) Бит 0 – контрольная лента, Бит 1 –
-                    чековая лента.
+                Флаги (1 байт)
+                    Бит 0 – контрольная лента,
+                    Бит 1 – чековая лента.
                 Печатаемые символы (20 байт)
             Ответ: 12H. Длина сообщения: 3 байта.
                 Код ошибки (1 байт)
@@ -747,8 +737,9 @@ class KKT(BaseKKT):
         """ Печать строки
             Команда: 17H. Длина сообщения: 46 байт.
                 Пароль оператора (4 байта)
-                Флаги (1 байт) Бит 0 – контрольная лента, Бит 1 –
-                    чековая лента.
+                Флаги (1 байт)
+                    Бит 0 – контрольная лента,
+                    Бит 1 – чековая лента.
                 Печатаемые символы (40 байт)
             Ответ: 17H. Длина сообщения: 3 байта.
                 Код ошибки (1 байт)
@@ -1070,8 +1061,10 @@ class KKT(BaseKKT):
         """ Протяжка
             Команда: 29H. Длина сообщения: 7 байт.
                 Пароль оператора (4 байта)
-                Флаги (1 байт) Бит 0 – контрольная лента, Бит 1 –
-                    чековая лента, Бит 2 – подкладной документ.
+                Флаги (1 байт)
+                    Бит 0 – контрольная лента,
+                    Бит 1 – чековая лента,
+                    Бит 2 – подкладной документ.
                 Количество строк (1 байт) 1...255 – максимальное
                     количество строк ограничивается размером буфера
                     печати, но не превышает 255
@@ -1180,8 +1173,9 @@ class KKT(BaseKKT):
         """ Печать строки данным шрифтом
             Команда: 2FH. Длина сообщения: 47 байт.
                 Пароль оператора (4 байта)
-                Флаги (1 байт) Бит 0 – контрольная лента, Бит 1 –
-                    чековая лента.
+                Флаги (1 байт)
+                    Бит 0 – контрольная лента,
+                    Бит 1 – чековая лента.
                 Номер шрифта (1 байт) 0...255
                 Печатаемые символы (40 байт)
             Ответ: 2FH. Длина сообщения: 3 байта.
@@ -1344,11 +1338,12 @@ class KKT(BaseKKT):
                 Конечная линия (2 байта) 1...600
                 Коэффициент масштабирования точки по вертикали (1 байт) 1...255
                 Коэффициент масштабирования точки по горизонтали (1 байт) 1...6
-                Флаги (1 байт) Бит 0 – контрольная лента 2 ,
-                               Бит 1 – чековая лента,
-                               Бит 2 – подкладной документ,
-                               Бит 3 – слип чек;
-                               Бит 7 – отложенная печать графики
+                Флаги (1 байт)
+                    Бит 0 – контрольная лента 2 ,
+                    Бит 1 – чековая лента,
+                    Бит 2 – подкладной документ,
+                    Бит 3 – слип чек;
+                    Бит 7 – отложенная печать графики
             Ответ: 4DH. Длина сообщения: 3 байта.
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
@@ -4248,6 +4243,11 @@ class KKT(BaseKKT):
                 Номер ФН: 16 байт ASCII
                 Номер последнего ФД: 4 байта
         """
+        command = chr(0xFF) + chr(0x01)
+        params = self.admin_password
+        data, error, command = self.ask(command, params)
+        return data
+
         raise NotImplementedError()
 
     # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
@@ -4520,7 +4520,6 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
-    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF38(self):
         """ Сформировать отчёт о состоянии расчётов
             Код команды FF38h. Длина сообщения: 6 байт.
@@ -4532,9 +4531,20 @@ class KKT(BaseKKT):
                 Количество неподтверждённых документов: 4 байта
                 Дата первого неподтверждённого документа: 3 байта ГГ,ММ,ДД
         """
-        raise NotImplementedError()
+        command = chr(0xFF) + chr(0x38)
+        params = self.admin_password
+        data, error, command = self.ask(command, params)
+        return {
+            'number': int4.unpack(data[0:4]),
+            'fiscal': int4.unpack(data[4:8]),
+            'count': int4.unpack(data[8:12]),
+            'first': {
+                'year': ord(data[12]),
+                'month': ord(data[13]),
+                'day': ord(data[14]),
+            },
+        }
 
-    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF39(self):
         """ Получить статус информационного обмена
             Код команды FF39h. Длина сообщения: 6 байт.
@@ -4551,15 +4561,31 @@ class KKT(BaseKKT):
                     Бит 5 – ожидание ответа на команду от ОФД
                 Состояние чтения сообщения: 1 байт
                     1 – да,
-                    0 -нет
+                    0 - нет
                 Количество сообщений для ОФД: 2 байта
                 Номер документа для ОФД первого в очереди: 4 байта
                 Дата и время документа для ОФД первого в очереди: 5 байт
         """
-        raise NotImplementedError()
+        command = chr(0xFF) + chr(0x39)
+        params = self.admin_password
+        data, error, command = self.ask(command, params)
+        status = string2bits(data[0])
+        status.reverse()
+        return {
+            'status': status,
+            'is_read': bool(ord(data[1])),
+            'messages': int2.unpack(data[2:4]),
+            'first': {
+                'number': int4.unpack(data[4:8]),
+                'day': ord(data[8]),
+                'month': ord(data[9]),
+                'year': ord(data[10]),
+                'hour': ord(data[11]),
+                'minute': ord(data[12]),
+            },
+        }
 
-    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
-    def xFF3A(self):
+    def xFF3A(self, number):
         """ Запросить фискальный документ в TLV формате
             Код команды FF3Аh. Длина сообщения: 10 байт.
                 Пароль системного администратора: 4 байта
@@ -4569,9 +4595,14 @@ class KKT(BaseKKT):
                 Тип фискального документа: 2 байта STLV
                 Длина фискального документа: 2 байта
         """
-        raise NotImplementedError()
+        command = chr(0xFF) + chr(0x3A)
+        params = self.admin_password + int4.pack(number)
+        data, error, command = self.ask(command, params)
+        return {
+            'type': int2.unpack(data[0:2]),
+            'length': int2.unpack(data[2:4]),
+        }
 
-    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF3B(self):
         """ Чтение TLV фискального документа
             Код команды FF3Bh. Длина сообщения: 6 байт.
@@ -4580,10 +4611,12 @@ class KKT(BaseKKT):
                 Код ошибки:1 байт
                 TLV структура: N байт
         """
-        raise NotImplementedError()
+        command = chr(0xFF) + chr(0x3B)
+        params = self.admin_password
+        data, error, command = self.ask(command, params)
+        return data
 
-    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
-    def xFF3C(self):
+    def xFF3C(self, number):
         """ Запрос квитанции о получении данных в ОФД по номеру документа
             Код команды FF3Сh. Длина сообщения: 11 байт.
                 Пароль системного администратора: 4 байта
@@ -4592,9 +4625,11 @@ class KKT(BaseKKT):
                 Код ошибки: 1 байт
                 Квитанция: N байт
         """
-        raise NotImplementedError()
+        command = chr(0xFF) + chr(0x3C)
+        params = self.admin_password + int4.pack(number)
+        data, error, command = self.ask(command, params)
+        return data
 
-    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF3D(self):
         """ Начать закрытие фискального режима
             Код команды FF3Dh. Длина сообщения: 6 байт.
@@ -4620,8 +4655,8 @@ class KKT(BaseKKT):
         params = self.admin_password
         data, error, command = self.ask(command, params)
         return {
-            'number': int2.unpack(data[0:4]),
-            'sign': int2.unpack(data[4:8]),
+            'number': int4.unpack(data[0:4]),
+            'sign': int4.unpack(data[4:8]),
         }
 
     def xFF3F(self):
@@ -4667,7 +4702,7 @@ class KKT(BaseKKT):
         params = self.admin_password
         data, error, command = self.ask(command, params)
         return error
- 
+
     def xFF42(self):
         """ Начать закрытие смены
             Код команды FF42h. Длина сообщения: 6 байт.
