@@ -33,6 +33,9 @@ __all__ = (
 
 PY2 = sys.version_info[0] == 2
 
+if not PY2:
+    raise RuntimeError("This module still doesn't work with Python 3")
+
 
 class Struct(struct.Struct):
     """ Преобразователь """

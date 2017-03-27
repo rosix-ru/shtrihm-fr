@@ -257,7 +257,7 @@ class BaseKKT(object):
             return False
         return True
 
-    def read(self):
+    def read(self, command):
         """ Считывает весь ответ ККМ """
         answer = self.check_state()
         if answer == NAK:
@@ -277,20 +277,23 @@ class BaseKKT(object):
             self.disconnect()
             raise ConnectionError('Нет связи с устройством')
 
-        length = ord(self._read(1))
-        command = self._read(1)
+        response_length = ord(self._read(1))
+        command_length = len(command)
+        data_length = response_length - command_length - 1
+
+        command = self._read(command_length)
         error = self._read(1)
-        data = self._read(length-2)
-        if length-2 != len(data):
+        data = self._read(data_length)
+        if data_length != len(data):
             self._write(NAK)
             self.disconnect()
             msg = ('Длина ответа (%i) не равна длине полученных данных (%i)' %
-                   (length, len(data)))
+                   (data_length, len(data)))
             raise KktError(msg)
 
         control_read = self._read(1)
         control_summ = get_control_summ(
-            chr(length) + command + error + data
+            chr(response_length) + command + error + data
         )
         if control_read != control_summ:
             self._write(NAK)
@@ -313,10 +316,9 @@ class BaseKKT(object):
         if not quick:
             self._flush()
         data = command
-        length = 1
         if params is not None:
             data += params
-            length += len(params)
+        length = len(data)
         content = chr(length) + data
         control_summ = get_control_summ(content)
         self._write(STX + content + control_summ)
@@ -343,7 +345,7 @@ class BaseKKT(object):
         self.send(command, params, quick=quick)
         if sleep:
             time.sleep(sleep)
-        a = self.read()
+        a = self.read(command)
         answer, error, command = (a['data'], a['error'], a['command'])
         if disconnect:
             self.disconnect()
@@ -864,7 +866,6 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
-    # Not implemented
     def x1D(self):
         """ Чтение лицензии
             Команда: 1DH. Длина сообщения: 5 байт.
@@ -873,7 +874,10 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Лицензия (5 байт) 0000000000...9999999999
         """
-        raise NotImplementedError()
+        command = 0x1D
+        params = self.admin_password
+        data, error, command = self.ask(command, params)
+        return data
 
     def x1E(self, table, row, field, value):
         """ Запись таблицы
@@ -916,8 +920,7 @@ class KKT(BaseKKT):
         data, error, command = self.ask(command, params)
         return data
 
-    # Not implemented
-    def x20(self):
+    def x20(self, pos=0):
         """ Запись положения десятичной точки
             Команда: 20H. Длина сообщения: 6 байт.
                 Пароль системного администратора (4 байта)
@@ -927,7 +930,10 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
 
         """
-        raise NotImplementedError()
+        command = 0x20
+        params = self.admin_password + chr(pos)
+        data, error, command = self.ask(command, params)
+        return error
 
     def x21(self, hour, minute, second):
         """ Программирование времени
@@ -1013,8 +1019,7 @@ class KKT(BaseKKT):
         operator = ord(data[0])
         return operator
 
-    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
-    def x26(self):
+    def x26(self, font_number=0):
         """ Прочитать параметры шрифта
             Команда: 26H. Длина сообщения: 6 байт.
                 Пароль системного администратора (4 байта)
@@ -1028,7 +1033,15 @@ class KKT(BaseKKT):
                     (1 байт)
                 Количество шрифтов в ККТ (1 байт)
         """
-        raise NotImplementedError()
+        command = 0x26
+        params = self.admin_password + chr(font_number)
+        data, error, command = self.ask(command, params)
+        return {
+            'width_area': int2.unpack(data[0:2]),
+            'width_char': ord(data[2]),
+            'height_char': ord(data[3]),
+            'fonts': ord(data[4]),
+        }
 
     def x27(self):
         """ Общее гашение
@@ -1089,8 +1102,7 @@ class KKT(BaseKKT):
         operator = ord(data[0])
         return operator
 
-    # Not implemented
-    def x2A(self):
+    def x2A(self, top=False):
         """ Выброс подкладного документа
             Команда: 2AH. Длина сообщения: 6 байт.
                 Пароль оператора (4 байта)
@@ -1100,7 +1112,11 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplementedError()
+        command = 0x2A
+        params = self.admin_password + chr(1 if top else 0)
+        data, error, command = self.ask(command, params)
+        operator = ord(data[0])
+        return operator
 
     def x2B(self):
         """ Прерывание тестового прогона
@@ -1218,7 +1234,6 @@ class KKT(BaseKKT):
         operator = ord(data[0])
         return operator
 
-    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def x42(self):
         """ Отчѐт по секциям
             Команда: 42H. Длина сообщения: 5 байт.
@@ -1227,9 +1242,12 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 29, 30
         """
-        raise NotImplementedError()
+        command = 0x42
+        params = self.admin_password
+        data, error, command = self.ask(command, params)
+        operator = ord(data[0])
+        return operator
 
-    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def x43(self):
         """ Отчѐт по налогам
             Команда: 43H. Длина сообщения: 5 байт.
@@ -1238,9 +1256,12 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 29, 30
         """
-        raise NotImplementedError()
+        command = 0x43
+        params = self.admin_password
+        data, error, command = self.ask(command, params)
+        operator = ord(data[0])
+        return operator
 
-    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def x44(self):
         """ Отчёт по кассирам
             Команда: 44H. Длина сообщения: 5 байт.
@@ -1250,9 +1271,12 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 28, 29, 30
         """
-        raise NotImplementedError()
+        command = 0x44
+        params = self.admin_password
+        data, error, command = self.ask(command, params)
+        operator = ord(data[0])
+        return operator
 
-    # Not implemented
     def x45(self):
         """ Отчёт почасовой
             Команда: 45H. Длина сообщения: 5 байт.
@@ -1262,9 +1286,12 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 28, 29, 30
         """
-        raise NotImplementedError()
+        command = 0x45
+        params = self.admin_password
+        data, error, command = self.ask(command, params)
+        operator = ord(data[0])
+        return operator
 
-    # Not implemented
     def x46(self):
         """ Отчёт по товарам
             Команда: 46H. Длина сообщения: 5 байт.
@@ -1274,7 +1301,11 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 28, 29, 30
         """
-        raise NotImplementedError()
+        command = 0x46
+        params = self.admin_password
+        data, error, command = self.ask(command, params)
+        operator = ord(data[0])
+        return operator
 
     # Not implemented
     def x4A(self):
@@ -1451,21 +1482,23 @@ class KKT(BaseKKT):
         operator = ord(data[0])
         return operator
 
-    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
-    def x53(self):
+    def x53(self, ads=False):
         """ Конец Документа
             Команда: 53H. Длина сообщения: 6 байт.
                 Пароль оператора (4 байта)
                 Параметр (1 байт)
-                    0- без рекламного текста
+                    0 - без рекламного текста
                     1 - с рекламным тестом
             Ответ: 53H. Длина сообщения: 3 байта.
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplementedError()
+        command = 0x53
+        params = self.password + chr(1 if ads else 0)
+        data, error, command = self.ask(command, params)
+        operator = ord(data[0])
+        return operator
 
-    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def x54(self):
         """ Печать рекламного текста
             Команда: 54H. Длина сообщения:5 байт.
@@ -1474,10 +1507,13 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 1...30
         """
-        raise NotImplementedError()
+        command = 0x54
+        params = self.password
+        data, error, command = self.ask(command, params)
+        operator = ord(data[0])
+        return operator
 
-    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
-    def x60(self):
+    def x60(self, password, number):
         """ Ввод заводского номера
             Команда: 60H. Длина сообщения: 9 байт.
                 Пароль (4 байта) (пароль «0»)
@@ -1485,9 +1521,11 @@ class KKT(BaseKKT):
             Ответ: 60H. Длина сообщения: 2 байта.
                 Код ошибки (1 байт)
         """
-        raise NotImplementedError()
+        command = 0x60
+        params = int4.pack(password) + int4.pack(number)
+        data, error, command = self.ask(command, params)
+        return error
 
-    # Not implemented
     def x61(self):
         """ Инициализация ФП
             Команда: 61H. Длина сообщения: 1 байт.
@@ -1500,7 +1538,9 @@ class KKT(BaseKKT):
                 инициализации и используется в технологических целях
                 при производстве ККМ на заводе-изготовителе.
         """
-        raise NotImplementedError()
+        command = 0x61
+        data, error, command = self.ask(command)
+        return error
 
     def x62(self, after=False):
         """ Запрос суммы записей в ФП
@@ -1543,7 +1583,6 @@ class KKT(BaseKKT):
 
         return result
 
-    # Not implemented
     def x63(self):
         """ Запрос даты последней записи в ФП
             Команда: 63H. Длина сообщения: 5 байт.
@@ -1552,11 +1591,23 @@ class KKT(BaseKKT):
             Ответ: 63H. Длина сообщения: 7 байт.
                 Код ошибки (1 байт)
                 Порядковый номер оператора (1 байт) 29, 30
-                Тип последней записи (1 байт) «0» – фискализация
-                    (перерегистрация), «1» – сменный итог
+                Тип последней записи (1 байт)
+                    «0» – фискализация (перерегистрация),
+                    «1» – сменный итог
                 Дата (3 байта) ДД-ММ-ГГ
         """
-        raise NotImplementedError()
+        command = 0x63
+        params = self.admin_password
+        data, error, command = self.ask(command, params)
+        return {
+            'operator': ord(data[0]),
+            'type': ord(data[1]),
+            'date': {
+                'day': ord(data[2]),
+                'month': ord(data[3]),
+                'year': ord(data[4]),
+            },
+        }
 
     # Not implemented
     def x64(self):
@@ -1623,15 +1674,17 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
-    # Not implemented
-    def x68(self):
+    def x68(self, password):
         """ Прерывание полного отчета
             Команда: 68H. Длина сообщения: 5 байт.
                 Пароль налогового инспектора (4 байта)
             Ответ: 68H. Длина сообщения: 2 байта.
                 Код ошибки (1 байт)
         """
-        raise NotImplementedError()
+        command = 0x68
+        params = int4.pack(password)
+        data, error, command = self.ask(command, params)
+        return error
 
     # Not implemented
     def x69(self):
@@ -1669,8 +1722,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
-    # Not implemented
-    def x6B(self):
+    def x6B(self, code):
         """ Возврат названия ошибки
             Команда: 6BH. Длина сообщения: 2 байта.
                 Код ошибки (1 байт)
@@ -1678,7 +1730,10 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
                 Название ошибки 1 (X байт)
         """
-        raise NotImplementedError()
+        command = 0x6B
+        params = chr(code)
+        data, error, command = self.ask(command, params)
+        return data
 
     # Not implemented
     def x70(self):
@@ -3045,7 +3100,6 @@ class KKT(BaseKKT):
         data, error, command = self.ask(command, params)
         return error
 
-    # Not implemented
     def xA8(self):
         """ Итог активизации ЭКЛЗ
             Команда: A8H. Длина сообщения: 5 байт.
@@ -3053,13 +3107,11 @@ class KKT(BaseKKT):
             Ответ: A8H. Длина сообщения: 2 байта.
                 Код ошибки (1 байт)
         """
-        raise NotImplementedError()
-        # command = 0xA8
-        # params = self.admin_password
-        # data, error, command = self.ask(command, params)
-        # return error
+        command = 0xA8
+        params = self.admin_password
+        data, error, command = self.ask(command, params)
+        return error
 
-    # Not implemented
     def xA9(self):
         """ Активизация ЭКЛЗ
             Команда: A9H. Длина сообщения: 5 байт.
@@ -3067,13 +3119,11 @@ class KKT(BaseKKT):
             Ответ: A9H. Длина сообщения: 2 байта.
                 Код ошибки (1 байт)
         """
-        raise NotImplementedError()
-        # command = 0xA9
-        # params = self.admin_password
-        # data, error, command = self.ask(command, params)
-        # return error
+        command = 0xA9
+        params = self.admin_password
+        data, error, command = self.ask(command, params)
+        return error
 
-    # Not implemented
     def xAA(self):
         """ Закрытие архива ЭКЛЗ
             Команда: AAH. Длина сообщения: 5 байт.
@@ -3081,11 +3131,10 @@ class KKT(BaseKKT):
             Ответ: AAH. Длина сообщения: 2 байта.
                 Код ошибки (1 байт)
         """
-        raise NotImplementedError()
-        # command = 0xAA
-        # params = self.admin_password
-        # data, error, command = self.ask(command, params)
-        # return error
+        command = 0xAA
+        params = self.admin_password
+        data, error, command = self.ask(command, params)
+        return error
 
     def xAB(self):
         """ Запрос регистрационного номера ЭКЛЗ
@@ -3100,7 +3149,6 @@ class KKT(BaseKKT):
         data, error, command = self.ask(command, params)
         return int5.unpack(data[:5])
 
-    # Not implemented
     def xAC(self):
         """ Прекращение ЭКЛЗ
             Команда: ACH. Длина сообщения: 5 байт.
@@ -3108,7 +3156,10 @@ class KKT(BaseKKT):
             Ответ: ACH. Длина сообщения: 2 байта.
                 Код ошибки (1 байт)
         """
-        raise NotImplementedError()
+        command = 0xAC
+        params = self.admin_password
+        data, error, command = self.ask(command, params)
+        return error
 
     # Not implemented
     def xAD(self):
@@ -3129,10 +3180,10 @@ class KKT(BaseKKT):
                 «Драйвер ККТ: руководство программиста» версии А4.3 и
                 выше.
         """
-        raise NotImplementedError()
         # command = 0xAD
         # params = self.admin_password
         # data, error, command = self.ask(command, params)
+        raise NotImplementedError()
 
     # Not implemented
     def xAE(self):
@@ -3147,12 +3198,11 @@ class KKT(BaseKKT):
                 Итог возвратов продаж (6 байт) 000000000000...999999999999
                 Итог возвратов покупок (6 байт) 000000000000...999999999999
         """
-        raise NotImplementedError()
         # command = 0xAE
         # params = self.admin_password
         # data, error, command = self.ask(command, params)
+        raise NotImplementedError()
 
-    # Not implemented
     def xAF(self):
         """ Тест целостности архива ЭКЛЗ
             Команда: AFH. Длина сообщения: 5 байт.
@@ -3160,10 +3210,10 @@ class KKT(BaseKKT):
             Ответ: AFH. Длина сообщения: 2 байта.
                 Код ошибки (1 байт)
         """
-        # command = 0xAF
-        # params = self.admin_password
-        # data, error, command = self.ask(command, params)
-        # return error
+        command = 0xAF
+        params = self.admin_password
+        data, error, command = self.ask(command, params)
+        return error
 
     def xB0(self, admin_password=None):
         """ Продолжение печати
@@ -4206,7 +4256,6 @@ class KKT(BaseKKT):
         # Наверное устарело
         raise NotImplementedError()
 
-    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF01(self):
         """ Запрос статуса ФН
             Код команды FF01h. Длина сообщения: 6 байт.
@@ -4239,18 +4288,45 @@ class KKT(BaseKKT):
                     00 – смена закрыта
                     01 – смена открыта
                 Флаги предупреждения: 1 байт
-                Дата и время: 5 байт
+                Дата и время: 5 байт (документа или ФН?)
                 Номер ФН: 16 байт ASCII
                 Номер последнего ФД: 4 байта
         """
         command = chr(0xFF) + chr(0x01)
         params = self.admin_password
         data, error, command = self.ask(command, params)
-        return data
+        doc_dict = {
+            0x00: 'нет открытого документа',
+            0x01: 'отчет о фискализации',
+            0x02: 'отчет об открытии смены',
+            0x04: 'кассовый чек',
+            0x08: 'отчет о закрытии смены',
+            0x10: 'отчет о закрытии фискального режима',
+            0x11: 'Бланк строкой отчетности',
+            0x12: ('Отчет об изменении параметров регистрации ККТ в '
+                   'связи с заменой ФН'),
+            0x13: 'Отчет об изменении параметров регистрации ККТ',
+            0x14: 'Кассовый чек коррекции',
+            0x15: 'БСО коррекции',
+            0x17: 'Отчет о текущем состоянии расчетов',
+        }
+        return {
+            'life_state': string2bits(data[0]),
+            'current_doc': doc_dict.get(ord(data[1]), None),
+            'doc_data': ord(data[2]),
+            'workshift_is_open': bool(ord(data[3])),
+            'warning_flags': string2bits(data[4]),
+            'datetime': {
+                'year': 2000 + ord(data[5]),
+                'month': ord(data[6]),
+                'day': ord(data[7]),
+                'hour': ord(data[8]),
+                'minute': ord(data[9]),
+            },
+            'fn_number': data[10:26],
+            'last_doc': int4.unpack(data[26:30]),
+        }
 
-        raise NotImplementedError()
-
-    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF02(self):
         """ Запрос номера ФН
             Код команды FF02h. Длина сообщения: 6 байт.
@@ -4259,9 +4335,11 @@ class KKT(BaseKKT):
                 Код ошибки: 1 байт
                 Номер ФН: 16 байт ASCII
         """
-        raise NotImplementedError()
+        command = chr(0xFF) + chr(0x02)
+        params = self.admin_password
+        data, error, command = self.ask(command, params)
+        return data
 
-    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF03(self):
         """ Запрос срока действия ФН
             Код команды FF03h. Длина сообщения: 6 байт.
@@ -4270,9 +4348,15 @@ class KKT(BaseKKT):
                 Код ошибки: 1 байт
                 Срок действия: 3 байта ГГ,ММ,ДД
         """
-        raise NotImplementedError()
+        command = chr(0xFF) + chr(0x03)
+        params = self.admin_password
+        data, error, command = self.ask(command, params)
+        return {
+            'year': 2000 + ord(data[0]),
+            'month': ord(data[1]),
+            'day': ord(data[2]),
+        }
 
-    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF04(self):
         """ Запрос версии ФН
             Код команды FF04h. Длина сообщения: 6 байт.
@@ -4284,7 +4368,13 @@ class KKT(BaseKKT):
                     0 – отладочная версия
                     1 – серийная версия
         """
-        raise NotImplementedError()
+        command = chr(0xFF) + chr(0x04)
+        params = self.admin_password
+        data, error, command = self.ask(command, params)
+        return {
+            'version': data[0:16],
+            'is_serial': bool(ord(data[16])),
+        }
 
     # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF05(self):
@@ -4318,8 +4408,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
-    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
-    def xFF07(self):
+    def xFF07(self, code):
         """ Сброс состояния ФН
             Код команды FF07h. Длина сообщения: 7 байт.
                 Пароль системного администратора: 4 байта
@@ -4327,9 +4416,11 @@ class KKT(BaseKKT):
             Ответ: FF07h Длина сообщения: 1 байт.
                 Код ошибки: 1 байт
         """
-        raise NotImplementedError()
+        command = chr(0xFF) + chr(0x07)
+        params = self.admin_password + chr(code)
+        data, error, command = self.ask(command, params)
+        return error
 
-    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF08(self):
         """ Отменить документ в ФН
             Код команды FF08h. Длина сообщения: 6 байт.
@@ -4337,7 +4428,10 @@ class KKT(BaseKKT):
             Ответ: FF08h Длина сообщения: 1 байт.
                 Код ошибки: 1 байт
         """
-        raise NotImplementedError()
+        command = chr(0xFF) + chr(0x08)
+        params = self.admin_password
+        data, error, command = self.ask(command, params)
+        return error
 
     # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF09(self):
@@ -4354,10 +4448,26 @@ class KKT(BaseKKT):
                 Номер ФД: 4 байта
                 Фискальный признак: 4 байта
         """
-        raise NotImplementedError()
+        command = chr(0xFF) + chr(0x09)
+        params = self.admin_password
+        data, error, command = self.ask(command, params)
+        return {
+            'datetime': {
+                'year': 2000 + ord(data[0]),
+                'month': ord(data[1]),
+                'day': ord(data[2]),
+                'hour': ord(data[3]),
+                'minute': ord(data[4]),
+            },
+            'inn': data[5:17].replace(' ', ''),
+            'reg_number': data[17:37].replace(' ', ''),
+            'tax_code': ord(data[37]),
+            'work_mode': ord(data[38]),
+            'fd_number': int4.unpack(data[39:43]),
+            'fiscal': int4.unpack(data[43:47]),
+        }
 
-    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
-    def xFF0A(self):
+    def xFF0A(self, number):
         """ Найти фискальный документ по номеру
             Код команды FF0Ah. Длина сообщения: 10 байт.
                 Пароль системного администратора: 4 байта
@@ -4371,7 +4481,14 @@ class KKT(BaseKKT):
                 Данные фискального документа в зависимости от типа
                 документ: N байт
         """
-        raise NotImplementedError()
+        command = chr(0xFF) + chr(0x09)
+        params = self.admin_password + int4.pack(number)
+        data, error, command = self.ask(command, params)
+        return {
+            'doc_type': data[0],
+            'ofd_check': bool(ord(data[1])),
+            'data': data[2:],
+        }
 
     # Not implemented
     def xFF0B(self):
@@ -4386,8 +4503,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
-    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
-    def xFF0C(self):
+    def xFF0C(self, tlv):
         """ Передать произвольную TLV структуру
             Код команды FF0Ch. Длина сообщения: 6+N байт.
                 Пароль системного администратора: 4 байта
@@ -4395,10 +4511,14 @@ class KKT(BaseKKT):
             Ответ: FF0Сh Длина сообщения: 1 байт.
                 Код ошибки: 1 байт
         """
-        raise NotImplementedError()
+        command = chr(0xFF) + chr(0x0C)
+        params = self.admin_password + tlv[:250]
+        data, error, command = self.ask(command, params)
+        return error
 
-    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
-    def xFF0D(self):
+    # TODO: Тщательно протестировать и, возможно, улучшить.
+    def xFF0D(self, operation, count, price, discount, increment,
+              department, tax, barcode, text):
         """ Операция со скидками и надбавками
             Код команды FF0Dh. Длина сообщения: 254 байт.
                 Пароль системного администратора: 4 байта
@@ -4428,9 +4548,19 @@ class KKT(BaseKKT):
             Ответ: FF0Dh Длина сообщения: 1 байт.
             Код ошибки: 1 байт
         """
-        raise NotImplementedError()
+        command = chr(0xFF) + chr(0x0D)
+        params = self.admin_password + chr(operation)
+        params += int5.pack(count)
+        params += int5.pack(price)
+        params += int5.pack(discount)
+        params += int5.pack(increment)
+        params += chr(department)
+        params += chr(tax)
+        params += int5.pack(barcode)
+        params += text[:220]
+        data, error, command = self.ask(command, params)
+        return error
 
-    # Not implemented
     def xFF16(self):
         """ Инициализация EEPROM
             Команда: FF16H. Длина сообщения: 2 байта.
@@ -4438,7 +4568,9 @@ class KKT(BaseKKT):
                 Код ошибки (1 байт)
             Примечание: для Белоруссии.
         """
-        raise NotImplementedError()
+        command = chr(0xFF) + chr(0x16)
+        data, error, command = self.ask(command)
+        return error
 
     # Not implemented
     def xFF1A(self):
@@ -4472,8 +4604,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
-    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
-    def xFF34(self):
+    def xFF34(self, code):
         """ Сформировать отчёт о перерегистрации ККТ
             Код команды FF34h. Длина сообщения: 7 байт.
                 Пароль системного администратора: 4 байта
@@ -4483,9 +4614,14 @@ class KKT(BaseKKT):
                 Номер ФД: 4 байта
                 Фискальный признак: 4 байта
         """
-        raise NotImplementedError()
+        command = chr(0xFF) + chr(0x34)
+        params = self.admin_password + chr(code)
+        data, error, command = self.ask(command, params)
+        return {
+            'doc_number': int4.unpack(data[0:4]),
+            'fiscal': int4.unpack(data[4:8]),
+        }
 
-    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF35(self):
         """ Начать формирование чека коррекции
             Код команды FF35h. Длина сообщения: 6 байт.
@@ -4493,10 +4629,12 @@ class KKT(BaseKKT):
             Ответ: FF35h Длина сообщения: 1 байт.
                 Код ошибки: 1 байт
         """
-        raise NotImplementedError()
+        command = chr(0xFF) + chr(0x35)
+        params = self.admin_password
+        data, error, command = self.ask(command, params)
+        return error
 
-    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
-    def xFF36(self):
+    def xFF36(self, total, typeop):
         """ Сформировать чек коррекции FF36H
             Код команды FF36h. Длина сообщения: 12 байт.
                 Пароль системного администратора: 4 байта
@@ -4508,9 +4646,15 @@ class KKT(BaseKKT):
                 Номер ФД: 4 байта
                 Фискальный признак: 4 байт
         """
-        raise NotImplementedError()
+        command = chr(0xFF) + chr(0x36)
+        params = self.admin_password + int5.pack(total) + chr(typeop)
+        data, error, command = self.ask(command, params)
+        return {
+            'check_number': int2.unpack(data[0:2]),
+            'doc_number': int4.unpack(data[2:6]),
+            'fiscal': int4.unpack(data[6:10]),
+        }
 
-    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF37(self):
         """ Начать формирование отчёта о состоянии расчётов
             Код команды FF37h. Длина сообщения: 6 байт.
@@ -4518,7 +4662,10 @@ class KKT(BaseKKT):
             Ответ: FF37h Длина сообщения: 1 байт.
                 Код ошибки: 1 байт
         """
-        raise NotImplementedError()
+        command = chr(0xFF) + chr(0x37)
+        params = self.admin_password
+        data, error, command = self.ask(command, params)
+        return error
 
     def xFF38(self):
         """ Сформировать отчёт о состоянии расчётов
