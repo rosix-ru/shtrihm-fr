@@ -2675,8 +2675,9 @@ class KKT(BaseKKT):
         operator = ord(data[0])
         return operator
 
-    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
-    def x8E(self):
+    def x8E(self, cash=0, s2=0, s3=0, s4=0, s5=0, s6=0, s7=0, s8=0, s9=0,
+            s10=0, s11=0, s12=0, s13=0, s14=0, s15=0, s16=0,
+            discount_percent=0, n1=0, n2=0, n3=0, n4=0, text=''):
         """ Закрытие чека расширенное
             Команда: 8EH. Длина сообщения: 71+12*5=131 байт.
                 Пароль оператора (4 байта)
@@ -2708,7 +2709,33 @@ class KKT(BaseKKT):
                 Порядковый номер оператора (1 байт) 1...30
                 Сдача (5 байт) 0000000000...9999999999
         """
-        raise NotImplementedError()
+        command = 0x8E
+        params = self.password + \
+            int5.pack(cash) + \
+            int5.pack(s2) + \
+            int5.pack(s3) + \
+            int5.pack(s4) + \
+            int5.pack(s5) + \
+            int5.pack(s6) + \
+            int5.pack(s7) + \
+            int5.pack(s8) + \
+            int5.pack(s9) + \
+            int5.pack(s10) + \
+            int5.pack(s11) + \
+            int5.pack(s12) + \
+            int5.pack(s13) + \
+            int5.pack(s14) + \
+            int5.pack(s15) + \
+            int5.pack(s16) + \
+            int2.pack(discount_percent) + \
+            chr(n1) + \
+            chr(n2) + \
+            chr(n3) + \
+            chr(n4) + \
+            text[:40]
+        data, error, command = self.ask(command, params)
+        operator = ord(data[0])
+        return int5.unpack(data[1:])
 
     # Not implemented
     def x90(self):
@@ -4433,7 +4460,6 @@ class KKT(BaseKKT):
         data, error, command = self.ask(command, params)
         return error
 
-    # TODO: Реализовать в первую очередь для ШТРИХ-ФР-01Ф.
     def xFF09(self):
         """ Запрос итогов фискализации
             Код команды FF09h. Длина сообщения: 6 байт.
@@ -4503,7 +4529,7 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
-    def xFF0C(self, tlv):
+    def xFF0C(self, tlv_dict):
         """ Передать произвольную TLV структуру
             Код команды FF0Ch. Длина сообщения: 6+N байт.
                 Пароль системного администратора: 4 байта
@@ -4512,7 +4538,14 @@ class KKT(BaseKKT):
                 Код ошибки: 1 байт
         """
         command = chr(0xFF) + chr(0x0C)
-        params = self.admin_password + tlv[:250]
+        tlv = ''
+        for key, value in tlv_dict.items():
+            if isinstance(key, int):
+                key = int2.pack(key)
+            assert len(key) == 2, 'Key for TLV must be 2 chars.'
+            tlv += key + int2.pack(len(value)) + value
+        assert len(tlv) <= 250, 'Length TLV struct longer then 250 chars.'
+        params = self.admin_password + tlv
         data, error, command = self.ask(command, params)
         return error
 
