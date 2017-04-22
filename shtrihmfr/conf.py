@@ -26,7 +26,7 @@ DEFAULT_PASSWORD = (0x1, 0x0, 0x0, 0x0)
 
 # Порт в GNU/Linux по-умолчанию (COM1)
 DEFAULT_PORT = '/dev/ttyUSB0'
-DEFAULT_BOD = 4800
+DEFAULT_BOD = 115200  # slow: 4800
 
 # Кодировка текста для устройств
 CODE_PAGE = 'cp1251'

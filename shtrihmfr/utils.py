@@ -20,6 +20,7 @@
 #
 from __future__ import unicode_literals
 import struct
+import six
 import sys
 
 
@@ -27,7 +28,8 @@ __all__ = (
     'PY2', 'int2', 'int4', 'int5', 'int6', 'int7', 'int8',
     'money2integer', 'integer2money', 'count2integer',
     'get_control_summ', 'string2bits', 'bits2string',
-    'digits2string', 'password_prapare'
+    'digits2string', 'password_prapare',
+    'force_text', 'force_bytes',
 )
 
 
@@ -174,3 +176,35 @@ def password_prapare(password):
         raise ValueError(msg)
 
     return int4.pack(password)
+
+
+def force_text(s, encoding='utf-8', errors='strict'):
+    "Преобразование объекта в строку Юникода."
+
+    if isinstance(s, six.text_type):
+        return s
+
+    if not isinstance(s, six.string_types):
+        if six.PY3:
+            if isinstance(s, bytes):
+                s = six.text_type(s, encoding, errors)
+            else:
+                s = six.text_type(s)
+        elif hasattr(s, '__unicode__'):
+            s = six.text_type(s)
+        else:
+            s = six.text_type(bytes(s), encoding, errors)
+    else:
+        s = s.decode(encoding, errors)
+
+    return s
+
+
+def force_bytes(s, encoding='utf-8', errors='strict'):
+    "Преобразование объекта в строку байт-символов."
+    if isinstance(s, bytes):
+        if encoding == 'utf-8':
+            return s
+        else:
+            return s.decode('utf-8', errors).encode(encoding, errors)
+    return s.encode(encoding, errors)
