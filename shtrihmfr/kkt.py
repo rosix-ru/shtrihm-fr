@@ -4753,11 +4753,13 @@ class KKT(BaseKKT):
             'messages': int2.unpack(data[2:4]),
             'first': {
                 'number': int4.unpack(data[4:8]),
-                'day': ord(data[8]),
-                'month': ord(data[9]),
-                'year': ord(data[10]),
-                'hour': ord(data[11]),
-                'minute': ord(data[12]),
+                'date': '%(year)s-%(month)s-%(day)s %(hour)s:%(minute)s' % {
+                    'year': ord(data[8]),
+                    'month': ord(data[9]),
+                    'day': ord(data[10]),
+                    'hour': ord(data[11]),
+                    'minute': ord(data[12]),
+                },
             },
         }
 
