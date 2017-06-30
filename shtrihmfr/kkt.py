@@ -4748,12 +4748,12 @@ class KKT(BaseKKT):
         status = string2bits(data[0])
         status.reverse()
         status_dict = {
-            'transport_connection': bool(status[0]),
-            'message_for_operator': bool(status[1]),
-            'waiting_message_response': bool(status[2]),
-            'exists_operator_command': bool(status[3]),
-            'changed_operator_settings': bool(status[4]),
-            'waiting_command_response': bool(status[5]),
+            'connection': bool(status[0]),
+            'message': bool(status[1]),
+            'wait_message': bool(status[2]),
+            'command': bool(status[3]),
+            'changed': bool(status[4]),
+            'wait_command': bool(status[5]),
         }
         return {
             'status': status_dict,
