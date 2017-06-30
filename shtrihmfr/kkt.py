@@ -4747,8 +4747,16 @@ class KKT(BaseKKT):
         data, error, command = self.ask(command, params)
         status = string2bits(data[0])
         status.reverse()
+        status_dict = {
+            'transport_connection': bool(status[0]),
+            'message_for_operator': bool(status[1]),
+            'waiting_message_response': bool(status[2]),
+            'exists_operator_command': bool(status[3]),
+            'changed_operator_settings': bool(status[4]),
+            'waiting_command_response': bool(status[5]),
+        }
         return {
-            'status': status,
+            'status': status_dict,
             'is_read': bool(ord(data[1])),
             'messages': int2.unpack(data[2:4]),
             'first': {
