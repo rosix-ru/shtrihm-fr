@@ -209,7 +209,7 @@ class BaseKKT(object):
             time.sleep(timeout)
             answer = self._read(1)
             n += 1
-            timeout *= 1.5z
+            timeout *= 1.5
         if answer == STX:
             return True
         else:
