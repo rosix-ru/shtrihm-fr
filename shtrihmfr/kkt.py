@@ -184,25 +184,14 @@ class BaseKKT(object):
             raise ConnectionError('Последовательный порт закрыт')
         return True
 
-    def check_state(self):
-        """ Проверка на ожидание команды """
-        self.check_port()
-        self._write(ENQ)
-        answer = self._read(1)
-        if not answer:
-            time.sleep(MIN_TIMEOUT)
-            answer = self._read(1)
-        if answer in (NAK, ACK):
-            return answer
-        elif not answer:
-            raise ConnectionError('Нет связи с устройством')
-
-    def check_STX(self):
-        """ Проверка на данные """
-        answer = self._read(1)
+    def get_answer(self, short=False):
+        "Считывает ответ с устройства с некоторым количеством попыток."
         # Для гарантированного получения ответа стоит обождать
         # некоторое время, от минимального (0.05 секунд)
         # до 12.8746337890625 секунд по умолчанию для 12 попыток
+        answer = self._read(1)
+        if short:
+            return answer
         n = 0
         timeout = MIN_TIMEOUT
         while not answer and n < MAX_ATTEMPT:
@@ -210,6 +199,21 @@ class BaseKKT(object):
             answer = self._read(1)
             n += 1
             timeout *= 1.5
+        return answer
+
+    def check_state(self, short=False):
+        """ Проверка на ожидание команды """
+        self.check_port()
+        self._write(ENQ)
+        answer = self.get_answer(short)
+        if answer in (NAK, ACK):
+            return answer
+        elif not answer:
+            raise ConnectionError('Нет связи с устройством')
+
+    def check_STX(self):
+        """ Проверка на данные """
+        answer = self.get_answer(short=True)
         if answer == STX:
             return True
         else:
@@ -217,14 +221,14 @@ class BaseKKT(object):
 
     def check_NAK(self):
         """ Проверка на ожидание команды """
-        answer = self.check_state()
+        answer = self.check_state(short=True)
         if answer == NAK:
             return True
         return False
 
     def check_ACK(self):
         """ Проверка на подготовку ответа """
-        answer = self.check_state()
+        answer = self.check_state(short=True)
         if answer == ACK:
             return True
         return False
@@ -260,7 +264,7 @@ class BaseKKT(object):
 
     def read(self, command):
         """ Считывает весь ответ ККМ """
-        answer = self.check_state()
+        answer = self.check_state(short=False)
         if answer == NAK:
             i = 0
             while i < MAX_ATTEMPT and not self.check_ACK():
@@ -316,6 +320,9 @@ class BaseKKT(object):
         # self.clear()
         if not quick:
             self._flush()
+
+        self.check_state(short=False)
+
         data = command
         if params is not None:
             data += force_bytes(params)
