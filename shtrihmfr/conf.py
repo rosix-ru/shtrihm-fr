@@ -33,4 +33,4 @@ CODE_PAGE = 'cp1251'
 
 # Кол-во попыток и таймаут
 MAX_ATTEMPT = 12
-MIN_TIMEOUT = 0.05
+MIN_TIMEOUT = 1.0
