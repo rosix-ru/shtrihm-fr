@@ -189,16 +189,9 @@ class BaseKKT(object):
         self.check_port()
         self._write(ENQ)
         answer = self._read(1)
-        # Для гарантированного получения ответа стоит обождать
-        # некоторое время, от минимального (0.05 секунд)
-        # до 12.8746337890625 секунд по умолчанию для 12 попыток
-        n = 0
-        timeout = MIN_TIMEOUT
-        while not answer and n < MAX_ATTEMPT:
-            time.sleep(timeout)
+        if not answer:
+            time.sleep(MIN_TIMEOUT)
             answer = self._read(1)
-            n += 1
-            timeout *= 1.5
         if answer in (NAK, ACK):
             return answer
         elif not answer:
