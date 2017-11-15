@@ -18,15 +18,29 @@
 #  MA 02110-1301, USA.
 #
 #
-from __future__ import unicode_literals
+from __future__ import unicode_literals, print_function
 
+import datetime
+import logging
 import serial
 import time
-import datetime
 
-from .conf import *  # NOQA
-from .protocol import *  # NOQA
-from .utils import *  # NOQA
+from shtrihmfr.conf import (
+    DEFAULT_ADMIN_PASSWORD, DEFAULT_PASSWORD, DEFAULT_PORT, DEFAULT_BOD,
+    CODE_PAGE, MAX_ATTEMPT, MIN_TIMEOUT,
+)
+from shtrihmfr.protocol import BUGS, KKT_FLAGS, FP_FLAGS
+from shtrihmfr.utils import (
+    PY2, int2, int4, int5, int6, int8,
+    money2integer, integer2money, count2integer,
+    get_control_summ, string2bits,
+    digits2string, password_prapare,
+    force_bytes
+)
+
+
+logger = logging.getLogger(__name__)
+
 
 # ASCII
 
@@ -142,22 +156,30 @@ class BaseKKT(object):
             )
         for k, v in kwargs.items():
             setattr(self, k, v)
+        self.clear_vars()
+
+    def clear_vars(self):
+        self._command = None
+        self._params = None
+        self._quick = False
+        self._request = None
+        self._response = None
 
     @property
     def is_connected(self):
-        """ Возвращает состояние соединение """
+        "Возвращает состояние соединение."
         return bool(self._conn)
 
     @property
     def conn(self):
-        """ Возвращает соединение """
+        "Возвращает соединение."
         if hasattr(self, '_conn') and self._conn is not None:
             return self._conn
         self.connect()
         return self._conn
 
     def connect(self):
-        """ Устанавливает соединение """
+        "Устанавливает соединение."
         try:
             self._conn = serial.Serial(
                 self.port, self.bod,
@@ -172,62 +194,25 @@ class BaseKKT(object):
         return self.check_port()
 
     def disconnect(self):
-        """ Закрывает соединение """
+        "Закрывает соединение."
         if self.conn:
             self._conn.close()
             self._conn = None
         return True
 
     def check_port(self):
-        """ Проверка на готовность порта """
+        "Проверка на готовности порта."
         if not self.conn.isOpen():
             raise ConnectionError('Последовательный порт закрыт')
         return True
 
-    def check_state(self):
-        """ Проверка на ожидание команды """
-        self.check_port()
-        self._write(ENQ)
-        answer = self._read(1)
-        if not answer:
-            time.sleep(MIN_TIMEOUT)
-            answer = self._read(1)
-        if answer in (NAK, ACK):
-            return answer
-        elif not answer:
-            raise ConnectionError('Нет связи с устройством')
-
-    def check_STX(self):
-        """ Проверка на данные """
-        answer = self._read(1)
-        # Для гарантированного получения ответа стоит обождать
-        # некоторое время, от минимального (0.05 секунд)
-        # до 12.8746337890625 секунд по умолчанию для 12 попыток
-        n = 0
-        timeout = MIN_TIMEOUT
-        while not answer and n < MAX_ATTEMPT:
-            time.sleep(timeout)
-            answer = self._read(1)
-            n += 1
-            timeout *= 1.5
-        if answer == STX:
-            return True
-        else:
-            raise ConnectionError('Нет связи с устройством')
-
-    def check_NAK(self):
-        """ Проверка на ожидание команды """
-        answer = self.check_state()
-        if answer == NAK:
-            return True
-        return False
-
-    def check_ACK(self):
-        """ Проверка на подготовку ответа """
-        answer = self.check_state()
-        if answer == ACK:
-            return True
-        return False
+    def wait_connection(self):
+        "Ожидание соединения с портом."
+        for i in range(10):
+            if self.conn.isOpen():
+                return True
+            time.sleep(MIN_TIMEOUT * 2)
+        raise ConnectionError('Последовательный порт закрыт')
 
     def _read(self, read=None):
         """ Высокоуровневый метод считывания соединения """
@@ -241,119 +226,178 @@ class BaseKKT(object):
         """ Высокоуровневый метод слива в ККТ """
         return self.conn.flush()
 
-    def clear(self):
-        """ Сбрасывает ответ, если он болтается в ККМ """
-        def one_round():
-            self._write(ENQ)
-            answer = self._read(1)
-            if answer == NAK or not answer:
-                return True
-            time.sleep(MIN_TIMEOUT*10)
-            return False
-
-        n = 0
-        while n < MAX_ATTEMPT and not one_round():
-            n += 1
-        if n >= MAX_ATTEMPT:
-            return False
-        return True
-
-    def read(self, command):
-        """ Считывает весь ответ ККМ """
-        answer = self.check_state()
-        if answer == NAK:
-            i = 0
-            while i < MAX_ATTEMPT and not self.check_ACK():
-                i += 1
-            if i >= MAX_ATTEMPT:
-                self.disconnect()
-                raise ConnectionError('Нет связи с устройством')
-        elif not answer:
-            self.disconnect()
-            raise ConnectionError('Нет связи с устройством')
-        j = 0
-        while j < MAX_ATTEMPT and not self.check_STX():
-            j += 1
-        if j >= MAX_ATTEMPT:
-            self.disconnect()
-            raise ConnectionError('Нет связи с устройством')
-
-        response_length = ord(self._read(1))
-        command_length = len(command)
-        data_length = response_length - command_length - 1
-
-        command = self._read(command_length)
-        error = self._read(1)
-        data = self._read(data_length)
-        if data_length != len(data):
-            self._write(NAK)
-            self.disconnect()
-            msg = ('Длина ответа (%i) не равна длине полученных данных (%i)' %
-                   (data_length, len(data)))
-            raise KktError(msg)
-
-        control_read = self._read(1)
-        control_summ = get_control_summ(
-            chr(response_length) + command + error + data
-        )
-        if control_read != control_summ:
-            self._write(NAK)
-            self.disconnect()
-            msg = ("Контрольная сумма %i должна быть равна %i " %
-                   (ord(control_summ), ord(control_read)))
-            raise KktError(msg)
-        self._write(ACK)
-        self._flush()
-        # time.sleep(MIN_TIMEOUT*2)
-        return {
-            'command': command,
-            'error': ord(error),
-            'data': data
-        }
-
-    def send(self, command, params, quick=False):
-        """ Стандартная обработка команды """
-        # self.clear()
-        if not quick:
-            self._flush()
-        data = command
-        if params is not None:
-            data += force_bytes(params)
-        # print('kkt.send: %s' % repr(data))
-        length = len(data)
-        content = chr(length) + data
-        control_summ = get_control_summ(content)
-        self._write(STX + content + control_summ)
-        self._flush()
-        return True
-
-    def ask(self, command, params=None, sleep=0, pre_clear=True,
-            without_password=False, disconnect=True, quick=False):
+    def ask(self, command, params=None, without_password=False, quick=False,
+            **kwargs):
         """ Высокоуровневый метод получения ответа. Состоит из
             последовательной цепочки действий.
 
             Возвращает позиционные параметры: (data, error, command)
         """
-        if quick:
-            # pre_clear = False
-            disconnect = False
-            sleep = 0
+        # Соединение с устройством
+        self.wait_connection()
+        # Очистка переменных контекста выполнения.
+        self.clear_vars()
+        self._quick = quick
+        # Получение предыдущего ответа, если он не получен по какой-то причине.
+        self.send_ENQ(previous=True)
+
         if params is None and not without_password:
             params = self.password
-        # if pre_clear:
-            # self.clear()
+
         if isinstance(command, int):
             command = chr(command)
-        self.send(command, params, quick=quick)
-        if sleep:
-            time.sleep(sleep)
-        a = self.read(command)
-        answer, error, command = (a['data'], a['error'], a['command'])
-        if disconnect:
+
+        self.create_request(command, params)
+        # Получение текущего ответа.
+        # MAX_ATTEMPT попыток с 10-кратным увеличением таймаута,
+        # если KKT занят печатью предыдущей команды.
+        for i in range(MAX_ATTEMPT):
+            self.send_ENQ()
+            r = self._response
+            if r['error'] and r['error'] == 0x50:
+                # Идет печать предыдущей команды
+                time.sleep(MIN_TIMEOUT * 10)
+                continue
+            if r['error']:
+                raise KktError(r['error'])
+            break
+        if not self._quick:
             self.disconnect()
-        if error:
-            raise KktError(error)
-        return answer, error, command
+        return r['data'], r['error'], r['command']
+
+    def send_ENQ(self, stx_loop=0, previous=False):
+        "Посылка ENQ, ожидание ответа."
+        self._write(ENQ)
+        answer = self._read(1)
+        if not answer:
+            time.sleep(MIN_TIMEOUT)
+            answer = self._read(1)
+        if answer == NAK:
+            if previous:
+                return
+            # Может вызывать рекурсию.
+            return self.send_request()
+        elif answer == ACK:
+            # Может вызывать рекурсию.
+            return self.wait_STX(stx_loop=stx_loop, previous=previous)
+        elif not answer:
+            self._command = None
+            raise ConnectionError('Нет связи с устройством')
+        # Рекурсия.
+        # Ожидание конца передачи от KKT
+        logger.debug('Ожидание конца передачи от KKT')
+        time.sleep(MIN_TIMEOUT * 2)
+        return self.send_ENQ(previous=previous)
+
+    def create_request(self, command, params):
+        "Формирование команды-запроса."
+        self._command = command
+        self._params = params
+        self._response = None
+        data = command
+        if params is not None:
+            data += force_bytes(params)
+        length = len(data)
+        content = chr(length) + data
+        control_summ = get_control_summ(content)
+        self._request = STX + content + control_summ
+        return self._request
+
+    def send_request(self):
+        "Отправка запроса."
+        for i in range(MAX_ATTEMPT):
+            self._write(self._request)
+            self._flush()
+            answer = self._read(1)
+            if not answer:
+                time.sleep(MIN_TIMEOUT * 2)
+                answer = self._read(1)
+                if not answer:
+                    # Нет связи. Считываем заново.
+                    return self.send_ENQ()
+            if answer == ACK:
+                # Идёт подготовка ответа.
+                return self.wait_STX()
+        # Нет связи. Считываем заново.
+        return self.send_ENQ()
+
+    def read_response(self, previous=False):
+        "Считывание и запись ответа."
+
+        length = ord(self._read(1))
+        time.sleep(MIN_TIMEOUT)
+
+        response = self._read(length)
+        response_length = len(response)
+        time.sleep(MIN_TIMEOUT)
+
+        response_control = self._read(1)
+
+        # Если это предыдущий ответ, то сообщаем ККТ, что он получен.
+        if previous:
+            self._write(ACK)
+            self._flush()
+            time.sleep(MIN_TIMEOUT * 2)
+            return
+
+        if response_length != length:
+            logger.info(
+                'Длина ответа (%d) не равна длине полученных данных (%d)' %
+                (length, response_length)
+            )
+            self._write(NAK)
+            self._flush()
+            # Заново отправляем запрос.
+            return self.send_request()
+
+        command_length = len(self._command)
+        response_command = response[:command_length]
+        assert self._command == response_command, '%s != %s' % (
+            repr(self._command), repr(response_command)
+        )
+
+        error = response[command_length:command_length + 1]
+        data = response[command_length + 1:]
+
+        control_summ = get_control_summ(
+            chr(response_length) + response_command + error + data
+        )
+        if response_control != control_summ:
+            logger.info(
+                'Контрольная сумма (%d) должна быть равна (%d)' %
+                (ord(control_summ), ord(response_control))
+            )
+            self._write(NAK)
+            self._flush()
+            # Заново отправляем запрос.
+            return self.send_request()
+
+        # Сообщаем ККТ, что ответ получен
+        self._write(ACK)
+        if not self._quick:
+            self._flush()
+            time.sleep(MIN_TIMEOUT * 2)
+        self._response = {
+            'command': response_command,
+            'error': ord(error),
+            'data': data
+        }
+        return self._response
+
+    def wait_STX(self, stx_loop=0, previous=False):
+        "Состояние ожидания ответа."
+        answer = self._read(1)
+        if not answer:
+            time.sleep(MIN_TIMEOUT * 2)
+            answer = self._read(1)
+        if not answer:
+            raise RuntimeError('Таймаут STX истек')
+        if answer != STX:
+            if stx_loop < 10:
+                stx_loop += 1
+                return self.send_ENQ(stx_loop=stx_loop, previous=previous)
+            raise ConnectionError('Нет связи')
+        return self.read_response(previous=previous)
 
 
 class KKT(BaseKKT):
@@ -490,7 +534,7 @@ class KKT(BaseKKT):
         kkt_flags = [KKT_FLAGS[i] for i, x in enumerate(kkt_flags) if x]
         # Количество операций
         # старший байт и младший байт
-        operations = int2.unpack(data[10]+data[5])
+        operations = int2.unpack(data[10] + data[5])
 
         result = {
             'error': error,
@@ -545,10 +589,13 @@ class KKT(BaseKKT):
         day = ord(data[5])
         month = ord(data[6])
         year = ord(data[7])
-        if year > 90:
-            kkt_date = datetime.date(1900+year, month, day)
-        else:
-            kkt_date = datetime.date(2000+year, month, day)
+        try:
+            if year > 90:
+                kkt_date = datetime.date(1900 + year, month, day)
+            else:
+                kkt_date = datetime.date(2000 + year, month, day)
+        except:
+            kkt_date = None
 
         # Флаги ККТ
         # старший байт и младший байт
@@ -559,13 +606,16 @@ class KKT(BaseKKT):
         day = ord(data[20])
         month = ord(data[21])
         year = ord(data[22])
-        if year > 90:
-            fp_date = datetime.date(1900+year, month, day)
-        else:
-            fp_date = datetime.date(2000+year, month, day)
+        try:
+            if year > 90:
+                fp_date = datetime.date(1900 + year, month, day)
+            else:
+                fp_date = datetime.date(2000 + year, month, day)
+        except:
+            fp_date = None
 
         # Дата и время текущие
-        date = datetime.date(2000+ord(data[25]), ord(data[24]), ord(data[23]))
+        date = datetime.date(2000 + ord(data[25]), ord(data[24]), ord(data[23]))
         time = datetime.time(ord(data[26]), ord(data[27]), ord(data[28]))
 
         # Флаги ФП
@@ -792,7 +842,7 @@ class KKT(BaseKKT):
                 'Длина строки должна быть меньше или равна 30 символов')
         text = text.encode(CODE_PAGE).ljust(30, chr(0x0))
 
-        params = self.password + text + chr(flags)
+        params = self.password + text + chr(number)
 
         data, error, command = self.ask(command, params)
         operator = ord(data[0])
@@ -813,7 +863,7 @@ class KKT(BaseKKT):
         operator = ord(data[0])
         return operator
 
-    def x1A(self):
+    def x1A(self, number):
         """ Запрос денежного регистра
             Команда: 1AH. Длина сообщения: 6 байт.
                 Пароль оператора (4 байта)
@@ -839,7 +889,7 @@ class KKT(BaseKKT):
 
         return integer2money(int6.unpack(data[1:]))
 
-    def x1B(self):
+    def x1B(self, number):
         """ Запрос операционного регистра
             Команда: 1BH. Длина сообщения: 6 байт.
                 Пароль оператора (4 байта)
@@ -2721,7 +2771,7 @@ class KKT(BaseKKT):
             params += chr(val)
         params += text.encode(CODE_PAGE).ljust(40, chr(0x0))
         data, error, command = self.ask(command, params)
-        operator = ord(data[0])
+        # operator = ord(data[0])
         return integer2money(int5.unpack(data[1:]))
 
     # Not implemented
@@ -4245,7 +4295,7 @@ class KKT(BaseKKT):
             'protocol_version': ord(data[2]),
             'protocol_subversion': ord(data[3]),
             'device_model': ord(data[4]),
-            'device_language': sord(data[5]),
+            'device_language': ord(data[5]),
             'device_name': data[6:].decode(CODE_PAGE),
         }
         return result

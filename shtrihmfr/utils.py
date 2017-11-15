@@ -76,6 +76,7 @@ class Struct(struct.Struct):
                     value = value[:self.length]
         return value
 
+
 # Объекты класса Struct
 # Формат short по длинне 2 байта
 int2 = Struct(b'h', length=2)
@@ -107,7 +108,7 @@ def bits2string(bits):
     """ Convert bit array to string """
     chars = []
     for b in range(len(bits) / 8):
-        byte = bits[b*8:(b+1)*8]
+        byte = bits[b * 8:(b + 1) * 8]
         chars.append(chr(int(''.join([str(bit) for bit in byte]), 2)))
     return ''.join(chars).encode('utf-8')
 

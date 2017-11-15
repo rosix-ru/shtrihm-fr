@@ -32,5 +32,5 @@ DEFAULT_BOD = 115200  # slow: 4800
 CODE_PAGE = 'cp1251'
 
 # Кол-во попыток и таймаут
-MAX_ATTEMPT = 12
+MAX_ATTEMPT = 10
 MIN_TIMEOUT = 0.05
