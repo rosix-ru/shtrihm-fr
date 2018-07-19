@@ -493,7 +493,6 @@ class KKT(BaseKKT):
         """
         raise NotImplementedError()
 
-    # Not implemented
     def x0F(self):
         """ Запрос длинного заводского номера и длинного РНМ
             Команда: 0FH. Длина сообщения: 5 байт.
@@ -503,7 +502,12 @@ class KKT(BaseKKT):
                 Заводской номер (7 байт) 00000000000000...99999999999999
                 РНМ (7 байт) 00000000000000...99999999999999
         """
-        raise NotImplementedError()
+        command = 0x0F
+        data, error, command = self.ask(command)
+        return {
+            'serial_number': data[:7],
+            'rnm_number': data[7:14],
+        }
 
     def x10(self):
         """ Короткий запрос состояния ФР
