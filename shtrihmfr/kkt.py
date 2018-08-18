@@ -29,7 +29,7 @@ from shtrihmfr.conf import (
     DEFAULT_ADMIN_PASSWORD, DEFAULT_PASSWORD, DEFAULT_PORT, DEFAULT_BOD,
     CODE_PAGE, MAX_ATTEMPT, MIN_TIMEOUT,
 )
-from shtrihmfr.protocol import BUGS, KKT_FLAGS, FP_FLAGS
+from shtrihmfr.protocol import FN_BUGS, BUGS, KKT_FLAGS, FP_FLAGS
 from shtrihmfr.utils import (
     PY2, int2, int4, int5, int6, int8,
     money2integer, integer2money, count2integer,
@@ -55,7 +55,11 @@ class KktError(Exception):
     def __init__(self, value):
         if isinstance(value, int):
             self.value = value
-            self.source, self.message = BUGS[value]
+            # В новых онлайн-кассах ошибки ФП и ЕКЛЗ заменены на ФН
+            if value in FN_BUGS:
+                self.source, self.message = FN_BUGS[value]
+            else:
+                self.source, self.message = BUGS[value]
             msg = '%s: %s' % (self.source, self.message)
         else:
             msg = value
